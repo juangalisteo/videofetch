@@ -734,7 +734,7 @@ class App:
 
         # Main card
         card = Panel(frame)
-        card.pack(fill="both", expand=True)
+        card.pack(fill="x")  # the card keeps its size; the links box does not stretch
         body = card.inner
 
         heading = tk.Frame(body, bg=SURFACE)
@@ -745,7 +745,7 @@ class App:
         label(body, t("links_hint"), "body", MUTED).pack(anchor="w", pady=(px(2), px(14)))
 
         self.field = Panel(body, bg=FIELD, border=BORDER, radius=12, pad=6)
-        self.field.pack(fill="both", expand=True)
+        self.field.pack(fill="x")  # fixed height (5 lines); more lines scroll inside
         self.urls = tk.Text(self.field.inner, height=5, wrap="word", font=F["input"], undo=True,
                             bg=FIELD, fg=TEXT, insertbackground=ACCENT, insertwidth=px(2),
                             selectbackground=ACCENT_SOFT, selectforeground=TEXT, relief="flat", bd=0,
@@ -977,6 +977,7 @@ class App:
         else:
             self.placeholder.place(x=px(10), y=px(8))
         self.urls.edit_modified(False)
+        self.urls.see("insert")  # like a word processor: always show the line being typed
         self.build_names(list(dict.fromkeys(lines)))
 
     def name_var(self, key):
@@ -1041,6 +1042,10 @@ class App:
         if self.details.winfo_manager():
             self.details.pack_forget()
             self.details_button.configure(text=t("show_activity"))
+            # Back to the window's normal height (it no longer stays tall).
+            usable = self.root.winfo_screenheight() - px(90)
+            self.root.geometry(f"{self.root.winfo_width()}x{min(usable, self.required_height())}")
+            self.area._resize()
         else:
             self.details.pack(fill="x", pady=(px(14), 0))
             self.details_button.configure(text=t("hide_activity"))

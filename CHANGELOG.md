@@ -14,6 +14,8 @@ and this project follows [Semantic Versioning](https://semver.org/).
 - `01_DESCARGAR.cmd` detects a first run without yt-dlp and offers to install it
   (before, the window simply did not open until `02_ACTUALIZAR.cmd` was run).
 - Clearer messages when there are no links or a link is not valid (it shows which one).
+- The links box keeps a fixed height of 5 lines; extra lines scroll inside it and the
+  line being typed is always visible. Hiding the activity shrinks the window back.
 - Links pasted without `https://` (`youtube.com/...`, `youtu.be/...`) are accepted.
 
 ## [1.1.0] · 2026-10-30

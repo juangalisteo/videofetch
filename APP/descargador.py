@@ -2,7 +2,7 @@
 
 Lanzador portátil: las rutas salen de este archivo, nunca de la carpeta desde la que se abre.
 
-Proyecto:  VideoFetch v1.0.0
+Proyecto:  VideoFetch v1.1.0
 Autores:   Juan Bautista Galisteo Marqués (@juangalisteo)
            Juan Manuel Casado Triguero (@juanmacasado)
 Licencia:  MIT (ver LICENSE)
@@ -23,6 +23,8 @@ LIB = ROOT / "SISTEMA"
 DOWNLOADS = ROOT / "DOWNLOADS"
 sys.path.insert(0, str(ROOT))  # por si aún no se ha ordenado la carpeta
 sys.path.insert(0, str(LIB))
+sys.path.insert(0, str(APP))
+from idiomas import t, set_language, get_language, LANGUAGES  # noqa: E402  (textos en español e inglés)
 
 # Redes sociales: se nombran como @usuario y, si fallan, se reintentan en "modo incógnito".
 SOCIAL_DOMAINS = ("tiktok.com", "instagram.com", "x.com", "twitter.com", "facebook.com", "fb.watch", "threads.net")
@@ -41,30 +43,30 @@ def section(title):
 
 
 def collect_urls():
-    section("PASO 2 DE 2  |  ANADIR VIDEOS")
-    print("  Pega un enlace y pulsa ENTER para anadirlo.")
-    print("  Puedes seguir pegando mas enlaces, uno por linea.")
-    print("  Cuando termines, pulsa ENTER SIN ESCRIBIR para descargar.")
-    print("  Escribe SALIR para cancelar.\n")
+    section(t("c_step2"))
+    print(t("c_paste"))
+    print(t("c_more"))
+    print(t("c_finish"))
+    print(t("c_exit"))
     urls = []
     while True:
-        label = f"  Enlace {len(urls) + 1}"
+        label = t("c_link", n=len(urls) + 1)
         if urls:
-            label += f" [ENTER = descargar {len(urls)}]"
+            label += t("c_enter_download", n=len(urls))
         url = input(label + ": ").strip()
-        if url.lower() == "salir":
+        if url.lower() in ("salir", "exit"):
             return []
         if not url:
             return urls
         if not url.startswith(("https://", "http://")):
-            print("  ! Enlace no valido. Pega la direccion completa https://...\n")
+            print(t("c_invalid_link"))
             continue
         if url in urls:
-            print("  ! Este enlace ya esta en la lista.\n")
+            print(t("c_duplicate"))
             continue
         urls.append(url)
-        print(f"  OK - Enlace {len(urls)} anadido.")
-        print("  >> Pega otro enlace o pulsa ENTER para EMPEZAR.\n")
+        print(t("c_added", n=len(urls)))
+        print(t("c_another"))
 
 
 # ── Nombres de archivo ────────────────────────────────────────────────────
@@ -315,7 +317,7 @@ def make_editor_fix(downloader, notify, quality="original"):
             if wanted and short > wanted * 1.05:
                 size = f"-2:{wanted}" if details["width"] >= details["height"] else f"{wanted}:-2"
                 scale = ["-vf", f"scale={size}"]
-                notify("log", f"La web solo ofrecía {short}p · Se reduce a {wanted}p como has pedido")
+                notify("log", t("reduced", short=short, wanted=wanted))
             fix_video = video != "h264" or bool(scale)
             fix_audio = sound not in (None, "aac")
             extra_audio = details["audios"] > 1
@@ -324,9 +326,9 @@ def make_editor_fix(downloader, notify, quality="original"):
                 return [], info
             if extra_audio and not fix_video and not fix_audio and is_mp4:
                 # Varias pistas de audio confunden a los editores: se deja solo la principal.
-                notify("log", f"El vídeo traía {details['audios']} pistas de audio · Se deja solo la principal")
-            notify("status", "Convirtiendo para editores de vídeo… puede tardar unos minutos")
-            notify("log", f"Convirtiendo a MP4 H.264 + AAC (era {path.suffix[1:]} {video} + {sound or 'sin audio'})")
+                notify("log", t("audio_tracks", n=details["audios"]))
+            notify("status", t("converting_status"))
+            notify("log", t("converting_log", ext=path.suffix[1:], video=video, sound=sound or t("no_audio")))
             notify("progress", 0)
             target = path.with_suffix(".mp4")
             temporary = target.with_name(target.stem + ".convert.mp4")
@@ -341,11 +343,11 @@ def make_editor_fix(downloader, notify, quality="original"):
                 ok, error = run_ffmpeg(command, duration, notify)
                 if ok:
                     if fix_video:
-                        notify("log", f"Convertido con {name}")
+                        notify("log", t("converted_with", name=name))
                     break
                 temporary.unlink(missing_ok=True)
             if not ok:
-                notify("log", "Aviso: no se pudo convertir para editores: " + error.strip()[-300:])
+                notify("log", t("convert_failed") + error.strip()[-300:])
                 return [], info
             temporary.replace(target)
             if target != path:
@@ -360,13 +362,13 @@ def make_editor_fix(downloader, notify, quality="original"):
             short = min(details["width"], details["height"]) or max(details["width"], details["height"])
             if not short:
                 return
-            notify("log", f"Resolución descargada: {details['width']}×{details['height']} ({short}p)")
+            notify("log", t("resolution", w=details["width"], h=details["height"], short=short))
             offered = [min(f.get("width") or 0, f.get("height") or 0) or (f.get("height") or 0)
                        for f in info.get("formats") or [] if (f.get("vcodec") or "none") != "none"]
             best = max(offered, default=0)
             wanted = {"720": 720, "1080": 1080}.get(quality, 100000)
             if short < min(wanted, 720) and (not best or best <= short):
-                notify("note", f"{short}p · Es lo máximo que ofrece esta web")
+                notify("note", t("max_offered", short=short))
 
     return EditorCompat(downloader)
 
@@ -411,14 +413,13 @@ def download(url, output, quality, audio=False, extra=None, notify=None, cancell
         if cancelled():
             return False
         if mode == "incognito":
-            notify("incognito", "Ha fallado. Reintentando en modo incógnito…")
+            notify("incognito", t("retry_incognito"))
             if not impersonation_available():
-                notify("log", "Consejo: abre 02_ACTUALIZAR.cmd una vez para que el modo incógnito "
-                              "pueda hacerse pasar por un navegador real.")
+                notify("log", t("tip_update"))
         if mode == "cookies":
             if unsupported:
                 break
-            notify("incognito", f"Reintentando con tu sesión de {BROWSERS[browser]}…")
+            notify("incognito", t("retry_cookies", browser=BROWSERS[browser]))
         if mode != "normal":
             remove_leftovers(output, names)
         options = make_options(output, quality, audio, names, mode == "incognito", custom_name)
@@ -439,26 +440,28 @@ def download(url, output, quality, audio=False, extra=None, notify=None, cancell
             if "Unsupported URL" in message:
                 unsupported = True
             if "DRM" in message:
-                notify("log", "Esta web protege sus vídeos (DRM) · Busca el mismo vídeo en YouTube o redes sociales")
+                notify("log", t("drm"))
                 return False
             if mode == "cookies" and browser == "chrome" and (
                     "cookie" in message.lower() or "DPAPI" in message or "decrypt" in message.lower()):
-                notify("log", f"{BROWSERS[browser]} no deja leer sus cookies mientras está abierto o las protege. "
-                              "Ciérralo del todo y vuelve a probar, o elige Firefox.")
+                notify("log", t("chrome_locked", browser=BROWSERS[browser]))
             elif not isinstance(exc, yt_dlp.utils.DownloadError):
                 notify("log", message)
     if unsupported:
-        notify("log", "Esta web no es compatible con VideoFetch.")
+        notify("log", t("unsupported"))
     return False
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Descarga videos dentro de esta carpeta de herramientas.")
+    if "--lang" in sys.argv[1:-1]:
+        set_language(sys.argv[sys.argv.index("--lang") + 1])
+    parser = argparse.ArgumentParser(description=t("c_description"))
     parser.add_argument("urls", nargs="*")
     parser.add_argument("--quality", choices=["720", "1080", "original"], default="original")
-    parser.add_argument("--mp3", action="store_true", help="Guardar solo el audio en MP3")
-    parser.add_argument("--cookies", choices=sorted(BROWSERS), help="Usar la sesion de este navegador si hace falta")
-    parser.add_argument("--nombre", help="Nombre para los archivos (opcional)")
+    parser.add_argument("--mp3", action="store_true", help=t("c_help_mp3"))
+    parser.add_argument("--cookies", choices=sorted(BROWSERS), help=t("c_help_cookies"))
+    parser.add_argument("--nombre", "--name", dest="nombre", help=t("c_help_name"))
+    parser.add_argument("--lang", choices=LANGUAGES, help=t("c_help_lang"))
     parser.add_argument("--update", action="store_true")
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
@@ -467,29 +470,26 @@ def main():
                                 "yt-dlp[default,curl-cffi]"])
     import yt_dlp
     if args.check:
-        print("Herramienta:", yt_dlp.version.__version__)
+        print(t("c_tool"), yt_dlp.version.__version__)
         for tool in ("ffmpeg", "ffprobe", "node"):
-            print(tool + ":", shutil.which(tool) or "NO ENCONTRADO")
-        print("Modo incognito completo:", "SI" if impersonation_available() else "NO (abre 02_ACTUALIZAR.cmd)")
-        print("Destino:", DOWNLOADS)
+            print(tool + ":", shutil.which(tool) or t("c_not_found"))
+        print(t("c_incognito"), t("c_yes") if impersonation_available() else t("c_no_update"))
+        print(t("c_destination"), DOWNLOADS)
         return 0
     if not shutil.which("ffmpeg"):
-        print("Falta FFmpeg. Es necesario para unir el video y el audio.")
+        print(t("c_no_ffmpeg"))
         return 1
     urls = args.urls
     quality = args.quality
     audio = args.mp3
     if not urls:
-        section("VIDEOFETCH  |  Tus videos, en tu equipo")
-        print("  Las descargas se guardan dentro de VIDEOFETCH / DOWNLOADS.")
-        section("PASO 1 DE 2  |  ELEGIR CALIDAD")
-        print("  [1]  Video hasta 720p          Menor espacio")
-        print("  [2]  Video hasta 1080p         Mayor detalle, mas espacio")
-        print("  [3]  Video mejor disponible   Conserva la resolucion disponible")
-        print("  [4]  Solo audio MP3            Saca el sonido del video")
-        print("  [0]  Salir\n")
+        section(t("c_header"))
+        print(t("c_saved_in"))
+        section(t("c_step1"))
+        for key in ("c_opt1", "c_opt2", "c_opt3", "c_opt4", "c_opt0"):
+            print(t(key))
         while True:
-            choice = input("  Elige 1, 2, 3 o 4 [ENTER = mejor disponible]: ").strip()
+            choice = input(t("c_choose")).strip()
             if choice == "0":
                 return 0
             if choice == "4":
@@ -498,37 +498,37 @@ def main():
             quality = {"": "original", "1": "720", "2": "1080", "3": "original"}.get(choice)
             if quality:
                 break
-            print("  ! Opcion no valida. Elige 1, 2, 3, 4 o 0.")
+            print(t("c_bad_option"))
         urls = collect_urls()
     if not urls:
-        print("No has indicado enlaces.")
+        print(t("c_no_links"))
         return 0
     if any(not url.startswith(("https://", "http://")) for url in urls):
-        print("Utiliza enlaces completos que empiecen por https:// o http://.")
+        print(t("c_full_links"))
         return 1
     output = DOWNLOADS
     output.mkdir(exist_ok=True)
-    section("DESCARGA EN MARCHA")
-    print("  Enlaces en la lista:", len(urls))
+    section(t("c_running"))
+    print(t("c_in_list"), len(urls))
     if audio:
-        print("  Formato: MP3 (solo audio)")
+        print(t("c_format_mp3"))
     else:
-        print("  Calidad:", "Mejor disponible" if quality == "original" else quality + "p")
-    print("  Guardar en:", output)
-    print("  CTRL+C = detener.")
+        print(t("c_quality"), t("c_best") if quality == "original" else quality + "p")
+    print(t("c_save_in"), output)
+    print(t("c_ctrl_c"))
     failures = 0
     for index, url in enumerate(urls, 1):
-        section(f"ENLACE {index} DE {len(urls)}")
+        section(t("c_link_of", i=index, n=len(urls)))
         print("  " + url + "\n", flush=True)
         if not download(url, output, quality, audio, browser=args.cookies, custom_name=args.nombre,
                         notify=lambda kind, text="": kind != "progress" and print("  " + str(text))):
             failures += 1
-    section("RESUMEN FINAL")
-    print(f"  Descargados sin error: {len(urls) - failures}")
-    print(f"  Con error:             {failures}")
-    print("  Carpeta:              ", output)
+    section(t("c_summary"))
+    print(t("c_ok", n=len(urls) - failures))
+    print(t("c_errors", n=failures))
+    print(t("c_folder"), output)
     if failures:
-        print("  Repite los enlaces con error para reintentar.")
+        print(t("c_repeat"))
     return 1 if failures else 0
 
 
@@ -536,4 +536,4 @@ if __name__ == "__main__":
     try:
         raise SystemExit(main())
     except (KeyboardInterrupt, EOFError):
-        print("\nCancelado. Puedes repetir los mismos enlaces cuando quieras.")
+        print(t("c_cancelled"))

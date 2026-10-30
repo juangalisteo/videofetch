@@ -1,6 +1,6 @@
 """VideoFetch · ventana de descarga (comparte las opciones del lanzador de consola).
 
-Proyecto:  VideoFetch v1.0.0
+Proyecto:  VideoFetch v1.1.0
 Autores:   Juan Bautista Galisteo Marqués (@juangalisteo)
            Juan Manuel Casado Triguero (@juanmacasado)
 Licencia:  MIT (ver LICENSE)
@@ -24,8 +24,9 @@ core = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(core)
 ROOT, DOWNLOADS = core.ROOT, core.DOWNLOADS
 import yt_dlp
+from idiomas import t, get_language, set_language, LANGUAGES  # textos en español e inglés
 
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.1.0"
 
 # Texto nítido en pantallas con escalado (Windows).
 if sys.platform == "win32":
@@ -198,6 +199,8 @@ class Panel(tk.Canvas):
         self.after_idle(self._fit)
 
     def _fit(self, event=None):
+        if not self.winfo_exists():  # la ventana se ha redibujado (cambio de idioma)
+            return
         tk.Canvas.configure(self, height=self.inner.winfo_reqheight() + 2 * self.pad)
 
     def _redraw(self, event):
@@ -336,6 +339,8 @@ class ScrollArea(tk.Frame):
 
     def watch(self):
         """Si el contenido cambia de alto (más casillas, actividad...), se reajusta solo."""
+        if not self.winfo_exists():  # la ventana se ha redibujado (cambio de idioma)
+            return
         needed = self.needed_height()
         if needed != getattr(self, "last_needed", None):
             self.last_needed = needed
@@ -373,6 +378,8 @@ class ScrollArea(tk.Frame):
         self.canvas.yview_moveto((event.y - (self.grab or 0)) / h)
 
     def _wheel(self, event, step=None):
+        if not self.winfo_exists():  # zona antigua, ya sustituida al cambiar de idioma
+            return
         if step is None:
             step = -1 if event.delta > 0 else 1
         widget = event.widget
@@ -538,6 +545,8 @@ class IconButton(tk.Canvas):
             self.after(1200, self._reset)
 
     def _reset(self):
+        if not self.winfo_exists():
+            return
         self.done = False
         self._draw()
 
@@ -630,21 +639,20 @@ def eyebrow(parent, number, text):
     return label(parent, f"{number} — {text.upper()}", "eyebrow", FAINT)
 
 
-FORMAT_HINTS = [
-    "Vídeo con audio",
-    "Solo audio",
-]
-QUALITY_HINTS = [
-    "Hasta 720p · Ocupa menos espacio",
-    "Hasta 1080p · Alta definición",
-    "La mejor calidad",
-]
-QUALITY_MP3_HINT = "Audio en MP3"
+# Textos de las opciones (en el idioma elegido; ver idiomas.py).
+def format_hints():
+    return [t("hint_mp4"), t("hint_mp3")]
+
+
+def quality_hints():
+    return [t("hint_720"), t("hint_1080"), t("hint_max")]
+
+
+def browser_hints():
+    return [t("cookies_firefox"), t("cookies_chrome")]
+
+
 BROWSER_KEYS = ["firefox", "chrome"]
-BROWSER_HINTS = [
-    "Cookies de Firefox",
-    "Cookies de Chrome",
-]
 SETTINGS = APP / "videofetch_ajustes.json"
 
 
@@ -679,7 +687,15 @@ class App:
         root.protocol("WM_DELETE_WINDOW", self.close)
         window_icon(root)
         dark_title_bar(root)
+        self.name_vars = {}
+        self.build_ui()
+        self.fit_window()
+        self.root.after(100, self.poll)
 
+    def build_ui(self):
+        """Dibuja toda la ventana en el idioma elegido (se repite al cambiar de idioma)."""
+        root = self.root
+        self.card = None  # mientras se dibuja, no se recalculan alturas de la ventana anterior
         self.area = ScrollArea(root)
         self.area.pack(fill="both", expand=True)
         frame = tk.Frame(self.area.content, bg=BG)
@@ -692,13 +708,16 @@ class App:
         brand = tk.Frame(header, bg=BG)
         brand.pack(side="left", padx=(px(12), 0))
         label(brand, "VideoFetch", "brand").pack(anchor="w")
-        label(brand, "Descargador de vídeos", "small", MUTED).pack(anchor="w")
+        label(brand, t("subtitle"), "small", MUTED).pack(anchor="w")
         Chip(header, f"v{APP_VERSION}", fg=MUTED, font=F["mono"]).pack(side="right")
+        # Idioma: ES / EN, a la izquierda de la versión
+        self.language = Segmented(header, ["ES", "EN"], index=LANGUAGES.index(get_language()),
+                                  command=self.on_language, compact=True)
+        self.language.pack(side="right", padx=(0, px(10)))
 
         # Presentación
-        label(frame, "Tus vídeos, en tu equipo", "title").pack(anchor="w", pady=(px(34), px(6)))
-        label(frame, "Guarda tus vídeos directamente en tu equipo, sin anuncios ni registros.",
-              "lead", MUTED).pack(anchor="w", pady=(0, px(28)))
+        label(frame, t("title"), "title").pack(anchor="w", pady=(px(34), px(6)))
+        label(frame, t("lead"), "lead", MUTED).pack(anchor="w", pady=(0, px(28)))
 
         # Tarjeta principal
         card = Panel(frame)
@@ -707,11 +726,10 @@ class App:
 
         heading = tk.Frame(body, bg=SURFACE)
         heading.pack(fill="x")
-        eyebrow(heading, "01", "Enlaces").pack(side="left")
-        self.counter = Chip(heading, "0 vídeos", fg=MUTED)
+        eyebrow(heading, "01", t("links")).pack(side="left")
+        self.counter = Chip(heading, t("videos", n=0), fg=MUTED)
         self.counter.pack(side="right")
-        label(body, "Un enlace por línea · Los repetidos se descargan una sola vez",
-              "body", MUTED).pack(anchor="w", pady=(px(2), px(14)))
+        label(body, t("links_hint"), "body", MUTED).pack(anchor="w", pady=(px(2), px(14)))
 
         self.field = Panel(body, bg=FIELD, border=BORDER, radius=12, pad=6)
         self.field.pack(fill="both", expand=True)
@@ -727,7 +745,7 @@ class App:
         self.clear_icon.pack()
         self.urls.pack(fill="both", expand=True)
         SlimScrollbar(self.field.inner, self.urls)
-        self.placeholder = tk.Label(self.urls, text="Pega aquí tus enlaces de YouTube, TikTok o Instagram", font=F["input"],
+        self.placeholder = tk.Label(self.urls, text=t("placeholder"), font=F["input"],
                                     fg=FAINT, bg=FIELD, cursor="xterm")
         self.placeholder.place(x=px(10), y=px(8))
         self.placeholder.bind("<Button-1>", lambda e: self.urls.focus_set())
@@ -751,24 +769,24 @@ class App:
             return row
 
         divider()
-        self.format_hint = tk.StringVar(value=FORMAT_HINTS[0])
-        row = option_row("02", "Formato", self.format_hint)
-        self.media = Segmented(row, ["MP4  Vídeo", "MP3  Audio"], index=0, command=self.on_format, min_width=250)
+        self.format_hint = tk.StringVar(value=format_hints()[0])
+        row = option_row("02", t("format"), self.format_hint)
+        self.media = Segmented(row, [t("format_mp4"), t("format_mp3")], index=0, command=self.on_format,
+                               min_width=250)
         self.media.pack(side="right")
 
         divider()
-        self.quality_hint = tk.StringVar(value=QUALITY_HINTS[2])
-        row = option_row("03", "Calidad", self.quality_hint)
-        self.quality = Segmented(row, ["720p", "1080p", "Máxima"], index=2,
-                                 command=lambda i: self.quality_hint.set(QUALITY_HINTS[i]), min_width=250)
+        self.quality_hint = tk.StringVar(value=quality_hints()[2])
+        row = option_row("03", t("quality"), self.quality_hint)
+        self.quality = Segmented(row, ["720p", "1080p", t("quality_max")], index=2,
+                                 command=lambda i: self.quality_hint.set(quality_hints()[i]), min_width=250)
         self.quality.pack(side="right")
 
         divider()
-        eyebrow(body, "04", "Nombre del archivo").pack(anchor="w", pady=(0, px(10)))
+        eyebrow(body, "04", t("file_name")).pack(anchor="w", pady=(0, px(10)))
         # Una casilla por enlace (con 0 o 1 enlace, una sola). Vacía = nombre automático.
         self.names_holder = tk.Frame(body, bg=SURFACE)
         self.names_holder.pack(fill="x")
-        self.name_vars = {}
         self.name_fields = []
         self.shown_links = None
         self.build_names([])
@@ -778,15 +796,15 @@ class App:
         row.pack(fill="x")
         text = tk.Frame(row, bg=SURFACE)
         text.pack(side="left", fill="x", expand=True)
-        eyebrow(text, "05", "Destino").pack(anchor="w")
+        eyebrow(text, "05", t("destination")).pack(anchor="w")
         label(text, "VIDEOFETCH \\ DOWNLOADS", "mono", TEXT).pack(anchor="w", pady=(px(5), 0))
-        Button(row, "Abrir carpeta", self.open_folder, height=36, padx=16).pack(side="right")
+        Button(row, t("open_folder"), self.open_folder, height=36, padx=16).pack(side="right")
 
         # Cookies: línea pequeña al final de la tarjeta
         tk.Frame(body, bg=BORDER, height=1).pack(fill="x", pady=(px(20), px(12)))
         saved = load_settings().get("browser")
         browser_index = BROWSER_KEYS.index(saved) if saved in BROWSER_KEYS else 0
-        self.browser_hint = tk.StringVar(value=BROWSER_HINTS[browser_index])
+        self.browser_hint = tk.StringVar(value=browser_hints()[browser_index])
         row = tk.Frame(body, bg=SURFACE)
         row.pack(fill="x")
         label(row, textvariable=self.browser_hint, font="tiny", fg=FAINT).pack(side="left")
@@ -800,7 +818,7 @@ class App:
         self.dot = tk.Canvas(status_row, width=px(8), height=px(8), bg=BG, highlightthickness=0, bd=0)
         self.dot.create_oval(0, 0, px(8), px(8), fill=FAINT, outline="", tags="dot")
         self.dot.pack(side="left", padx=(0, px(10)))
-        self.status = tk.StringVar(value="Todo listo · Añade tus enlaces para comenzar")
+        self.status = tk.StringVar(value=t("ready"))
         label(status_row, textvariable=self.status, font="body", fg=TEXT, anchor="w").pack(
             side="left", fill="x", expand=True)
         self.percent = tk.StringVar(value="")
@@ -811,11 +829,11 @@ class App:
         # Acciones
         actions = tk.Frame(frame, bg=BG)
         actions.pack(fill="x", pady=(px(22), 0))
-        self.details_button = Button(actions, "Ver actividad", self.toggle_details, kind="ghost", height=40, padx=14)
+        self.details_button = Button(actions, t("show_activity"), self.toggle_details, kind="ghost", height=40, padx=14)
         self.details_button.pack(side="left")
-        self.start_button = Button(actions, "Descargar", self.start, kind="primary", height=44, padx=26)
+        self.start_button = Button(actions, t("download"), self.start, kind="primary", height=44, padx=26)
         self.start_button.pack(side="right")
-        self.stop_button = Button(actions, "Detener", self.stop, height=44, padx=20)
+        self.stop_button = Button(actions, t("stop"), self.stop, height=44, padx=20)
         self.stop_button.configure(state="disabled")
         self.stop_button.pack(side="right", padx=px(10))
 
@@ -829,8 +847,6 @@ class App:
         self.copy_icon.place(relx=1.0, x=-px(18), y=px(2), anchor="ne")
 
         self.card, self.frame = card, frame
-        self.fit_window()
-        self.root.after(100, self.poll)
 
     def required_height(self):
         """Altura real que necesita la ventana (las tarjetas redondeadas se miden aparte)."""
@@ -863,22 +879,54 @@ class App:
 
     # ── Utilidades de interfaz ──
     def on_browser(self, index):
-        self.browser_hint.set(BROWSER_HINTS[index])
+        self.browser_hint.set(browser_hints()[index])
         save_settings(browser=BROWSER_KEYS[index])
+
+    def on_language(self, index):
+        """Cambia el idioma y redibuja la ventana sin perder lo que había escrito."""
+        if self.running:
+            return
+        keep = dict(
+            lines=int(self.urls.cget("height")),
+            links=self.urls.get("1.0", "end-1c"),
+            media=self.media.current(),
+            quality=self.quality.current(),
+            details=bool(self.details.winfo_manager()),
+            log=self.log.get("1.0", "end-1c"),
+        )
+        set_language(LANGUAGES[index])
+        save_settings(language=LANGUAGES[index])
+        self.area.destroy()
+        self.build_ui()
+        self.urls.configure(height=keep["lines"])
+        if keep["links"]:
+            self.urls.insert("1.0", keep["links"])
+        if keep["media"]:
+            self.media.index = keep["media"]
+            self.media._draw()
+            self.on_format(keep["media"])
+        if keep["quality"] != self.quality.current():
+            self.quality.index = keep["quality"]
+            self.quality._draw()
+            if not self.audio():
+                self.quality_hint.set(quality_hints()[keep["quality"]])
+        if keep["log"]:
+            self.write_log(keep["log"])
+        if keep["details"]:
+            self.toggle_details()
+        self.relayout()
 
     def audio(self):
         return self.media.current() == 1
 
     def on_format(self, index):
-        self.format_hint.set(FORMAT_HINTS[index])
+        self.format_hint.set(format_hints()[index])
         if self.audio():
             self.quality.configure(state="disabled")
-            self.quality_hint.set(QUALITY_MP3_HINT)
-            self.start_button.configure(text="Descargar")
+            self.quality_hint.set(t("hint_quality_mp3"))
         else:
             self.quality.configure(state="normal")
-            self.quality_hint.set(QUALITY_HINTS[self.quality.current()])
-            self.start_button.configure(text="Descargar")
+            self.quality_hint.set(quality_hints()[self.quality.current()])
 
     def set_dot(self, color):
         self.dot.itemconfigure("dot", fill=color)
@@ -907,9 +955,9 @@ class App:
         lines = [line.strip() for line in content.splitlines() if line.strip()]
         count = len(set(lines))
         repeated = len(lines) - count
-        text = f"{count} vídeo{'s' if count != 1 else ''}"
+        text = t("videos", n=count)
         if repeated:
-            text += f" · {repeated} repetido{'s' if repeated != 1 else ''}"
+            text += " · " + t("repeated", n=repeated)
         self.counter.set_text(text, fg=TEXT if count else MUTED)
         if content.strip():
             self.placeholder.place_forget()
@@ -971,7 +1019,7 @@ class App:
 
     def relayout(self):
         """Recalcula alturas cuando cambia el contenido (más casillas, actividad...)."""
-        if not hasattr(self, "card"):
+        if getattr(self, "card", None) is None:
             return
         self.required_height()
         self.area._resize()
@@ -979,10 +1027,10 @@ class App:
     def toggle_details(self):
         if self.details.winfo_manager():
             self.details.pack_forget()
-            self.details_button.configure(text="Ver actividad")
+            self.details_button.configure(text=t("show_activity"))
         else:
             self.details.pack(fill="x", pady=(px(14), 0))
-            self.details_button.configure(text="Ocultar actividad")
+            self.details_button.configure(text=t("hide_activity"))
             needed = self.required_height()
             self.area._resize()
             usable = self.root.winfo_screenheight() - px(90)
@@ -1000,6 +1048,7 @@ class App:
         self.clear_icon.set_state(state)
         self.media.configure(state=state)
         self.browser.configure(state=state)
+        self.language.configure(state=state)
         for field in self.name_fields:
             field.set_state(state)
         self.quality.configure(state="normal" if enabled and not self.audio() else "disabled")
@@ -1020,10 +1069,10 @@ class App:
     def start(self):
         urls = list(dict.fromkeys(line.strip() for line in self.urls.get("1.0", "end").splitlines() if line.strip()))
         if not urls or any(not url.startswith(("https://", "http://")) for url in urls):
-            messagebox.showinfo("Revisa los enlaces", "Pega un enlace completo https://… por línea.")
+            messagebox.showinfo(t("check_links_title"), t("check_links"))
             return
         if not shutil.which("ffmpeg"):
-            messagebox.showerror("Falta FFmpeg", "No se encuentra FFmpeg, necesario para unir y convertir el vídeo y el audio.")
+            messagebox.showerror(t("no_ffmpeg_title"), t("no_ffmpeg"))
             return
         self.running = True
         self.note = None
@@ -1045,7 +1094,7 @@ class App:
 
     def stop(self):
         self.cancel.set()
-        self.status.set("Deteniendo…")
+        self.status.set(t("stopping"))
         self.set_dot(WARNING)
         self.stop_button.configure(state="disabled")
 
@@ -1058,19 +1107,19 @@ class App:
                     app.events.put(("log", message))
 
             def warning(self, message):
-                app.events.put(("log", "Aviso: " + message))
+                app.events.put(("log", t("warning") + message))
 
             def error(self, message):
                 app.events.put(("log", message))
 
         def hook(data):
             if app.cancel.is_set():
-                raise yt_dlp.utils.DownloadError("Descarga detenida por el usuario")
+                raise yt_dlp.utils.DownloadError(t("stopped_by_user"))
             total = data.get("total_bytes") or data.get("total_bytes_estimate")
             if data["status"] == "downloading" and total:
                 app.events.put(("progress", min(100, data.get("downloaded_bytes", 0) / total * 100)))
             elif data["status"] == "finished":
-                app.events.put(("status", "Convirtiendo a MP3…" if audio else "Uniendo vídeo y audio…"))
+                app.events.put(("status", t("to_mp3") if audio else t("merging")))
 
         def notify(kind, text=""):
             if kind == "status":
@@ -1079,7 +1128,7 @@ class App:
                 app.events.put(("progress", text))
             elif kind == "note":
                 app.events.put(("note", text))
-                app.events.put(("log", "Calidad: " + text))
+                app.events.put(("log", t("quality_log") + text))
             elif kind == "incognito":
                 app.events.put(("status", text))
                 app.events.put(("log", "— " + text))
@@ -1096,7 +1145,7 @@ class App:
             for index, url in enumerate(urls, 1):
                 if self.cancel.is_set():
                     break
-                self.events.put(("status", f"Descargando {index} de {len(urls)}"))
+                self.events.put(("status", t("downloading", i=index, n=len(urls))))
                 self.events.put(("progress", 0))
                 ok = core.download(url, output, quality, audio, extra=extra, notify=notify, browser=browser,
                                    custom_name=(names or {}).get(url) or None,
@@ -1135,19 +1184,18 @@ class App:
     def finish(self, completed, failures, stopped):
         self.running = False
         self.set_inputs(True)
-        done = f"{completed} descargado{'s' if completed != 1 else ''}"
+        done = t("downloaded", n=completed)
         if stopped:
-            self.status.set(f"Detenido · {done}" + (f" · {failures} con error" if failures else ""))
+            self.status.set(t("status_stopped", done=done) + (" · " + t("with_error", n=failures) if failures else ""))
             color = WARNING
         elif failures:
-            self.status.set(f"Terminado · {done} · {failures} con error. Mira la actividad para ver el motivo.")
+            self.status.set(t("status_failed", done=done, errors=t("with_error", n=failures)))
             color = DANGER if not completed else WARNING
         else:
-            where = "Ya está" if completed == 1 else "Ya están"
             if self.note:
-                self.status.set(f"Listo · {done} · {self.note}")
+                self.status.set(t("status_note", done=done, note=self.note))
             else:
-                self.status.set(f"Listo · {done}. {where} en la carpeta DOWNLOADS.")
+                self.status.set(t("status_done", n=completed, done=done))
             for variable in self.name_vars.values():
                 variable.set("")
             color = SUCCESS
@@ -1158,12 +1206,32 @@ class App:
 
     def close(self):
         if self.running:
-            messagebox.showinfo("Descarga en marcha", "Pulsa Detener y espera a que termine antes de cerrar.")
+            messagebox.showinfo(t("busy_title"), t("busy"))
             return
         self.root.destroy()
 
 
+ERROR_LOG = APP / "videofetch_errores.log"
+
+
+def log_error(*exc):
+    """Si algo falla, lo apunta en APP\\videofetch_errores.log (para poder arreglarlo)."""
+    try:
+        import datetime
+        import traceback
+        with ERROR_LOG.open("a", encoding="utf-8") as file:
+            file.write(f"\n--- {datetime.datetime.now():%Y-%m-%d %H:%M:%S} · v{APP_VERSION} ---\n")
+            file.write("".join(traceback.format_exception(*exc)))
+    except Exception:
+        pass
+
+
 if __name__ == "__main__":
     root = tk.Tk()
-    App(root)
+    root.report_callback_exception = log_error
+    try:
+        App(root)
+    except Exception:
+        log_error(*sys.exc_info())
+        raise
     root.mainloop()

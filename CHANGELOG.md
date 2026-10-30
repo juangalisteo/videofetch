@@ -1,24 +1,37 @@
-# Historial de versiones
+# Changelog
 
-Todos los cambios importantes de VideoFetch se apuntan aquí.
-Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
-y versiones según [Semantic Versioning](https://semver.org/lang/es/).
+**English** · [Español](CHANGELOG.es.md)
 
-## [1.0.0] · 30-10-2026
+All notable changes to VideoFetch are documented here.
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
+and this project follows [Semantic Versioning](https://semver.org/).
 
-Primera versión publicada.
+## [1.1.0] · 2026-10-30
 
-### Añadido
-- Ventana de escritorio (Tkinter) con diseño grafito y naranja `#FF5A1F`.
-- Descarga de varios enlaces a la vez (uno por línea, sin repetidos).
-- Formatos **MP4** y **MP3** (con carátula).
-- Calidades **720p**, **1080p** y **Máxima**, también para vídeos verticales.
-- MP4 siempre en **H.264 + AAC**, compatible con editores de vídeo; conversión
-  con tarjeta gráfica (NVIDIA, Intel o AMD) cuando la hay.
-- Nombres automáticos (título o `@usuario`), sin sobrescribir nunca (`_01`, `_02`…).
-- Nombre propio opcional para cada enlace.
-- Reintentos automáticos: modo incógnito y cookies de Firefox o Chrome.
-- Avisos claros de DRM y webs no compatibles.
-- Panel *Ver actividad* con progreso, resolución conseguida y botón *Detener*.
-- Modo consola (`APP\descargador.py`).
-- Accesos `01_DESCARGAR`, `02_ACTUALIZAR` y `03_CREAR_ACCESO_DIRECTO`.
+### Added
+- **ES / EN language selector** at the top, left of the version. It switches the whole
+  window instantly without losing what you typed (links, format, quality, names and activity).
+- On first launch it follows the Windows language; after that it remembers your choice.
+- Every text (window, dialogs, activity and console mode) lives in `APP/idiomas.py`.
+- English console mode with `--lang en` (and `--name` as an alias of `--nombre`).
+- Window error log in `APP/videofetch_errores.log`.
+- README, changelog and quick guide (`00_README_EN.txt`) in English.
+
+## [1.0.0] · 2026-10-30
+
+First public release.
+
+### Added
+- Desktop window (Tkinter) with a graphite and `#FF5A1F` orange design.
+- Download several links at once (one per line, duplicates skipped).
+- **MP4** and **MP3** formats (MP3 with cover art).
+- **720p**, **1080p** and **Best** quality, vertical videos included.
+- MP4 always in **H.264 + AAC**, compatible with video editors; conversion
+  uses the graphics card (NVIDIA, Intel or AMD) when available.
+- Automatic names (title or `@username`), never overwriting (`_01`, `_02`…).
+- Optional custom name for each link.
+- Automatic retries: incognito mode and Firefox or Chrome cookies.
+- Clear warnings for DRM and unsupported sites.
+- *Show activity* panel with progress, resolution obtained and a *Stop* button.
+- Console mode (`APP\descargador.py`).
+- `01_DESCARGAR`, `02_ACTUALIZAR` and `03_CREAR_ACCESO_DIRECTO` launchers.

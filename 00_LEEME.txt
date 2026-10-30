@@ -1,4 +1,5 @@
-VIDEOFETCH v1.0.0 - DESCARGADOR DE VIDEOS
+VIDEOFETCH v1.1.0 - DESCARGADOR DE VIDEOS
+(English: read 00_README_EN.txt)
 
 COMO USARLO
 1. Copia la carpeta VIDEOFETCH COMPLETA donde quieras.
@@ -9,6 +10,12 @@ COMO USARLO
 5. En MP4 elige la calidad: 720p, 1080p o Maxima.
 6. Pulsa Descargar (o Ctrl + Enter). Puedes ver la actividad y pulsar Detener.
 7. El boton Abrir carpeta muestra lo descargado.
+
+IDIOMA
+Arriba a la derecha, junto a la version, estan los botones ES / EN.
+Cambian toda la ventana a espanol o ingles al momento, sin perder lo escrito.
+La primera vez usa el idioma de Windows y despues recuerda tu eleccion.
+En la consola: APP\descargador.py --lang en
 
 ACCESO DIRECTO EN EL ESCRITORIO
 Haz doble clic UNA VEZ en 03_CREAR_ACCESO_DIRECTO.cmd y aparecera VideoFetch
@@ -25,9 +32,10 @@ VIDEOFETCH
   DOWNLOADS\                    Tus videos y audios
   APP\                          El programa: codigo, icono y ajustes guardados
   SISTEMA\                      Piezas internas (yt-dlp y demas). No tocar.
+  00_README_EN.txt              Estas instrucciones en ingles
   AGENT_AI\ESTADO.md            Estado del proyecto para trabajar con la IA
-  README.md                     Presentacion del proyecto (para GitHub)
-  CHANGELOG.md                  Historial de versiones
+  README.md / README.es.md      Presentacion del proyecto en ingles / espanol (GitHub)
+  CHANGELOG.md / CHANGELOG.es.md  Historial de versiones
   LICENSE                       Licencia MIT
   docs\                         Imagenes del README
 
@@ -102,6 +110,7 @@ Utiliza Python, FFmpeg y Node.js, que ya estan instalados aqui.
 En otro ordenador tambien deberan estar instalados y disponibles en PATH.
 No es un programa completamente independiente de Windows ni de esos requisitos.
 No contiene contrasenas. Solo usa tu sesion si un video falla sin ella.
+Si la ventana da algun error, queda apuntado en APP\videofetch_errores.log.
 Algunos sitios requieren acceso, no son compatibles o tienen proteccion.
 Para resolver los cambios de YouTube puede descargar componentes de yt-dlp
 desde GitHub. No permite saltarse DRM ni restricciones de acceso.

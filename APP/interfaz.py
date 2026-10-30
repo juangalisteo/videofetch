@@ -556,6 +556,16 @@ class IconButton(tk.Canvas):
         self._draw()
 
 
+def fix_link(text):
+    """Returns the link ready to download, or None if it does not look like one.
+    Links pasted without https:// (youtube.com/..., youtu.be/...) get it added."""
+    if text.startswith(("https://", "http://")):
+        return text
+    if re.match(r"^[\w-]+(\.[\w-]+)+(/\S*)?$", text):
+        return "https://" + text
+    return None
+
+
 def short_link(url, size=30):
     text = re.sub(r"^https?://(www\.)?", "", url)
     return text if len(text) <= size else text[:size - 1] + "…"
@@ -1067,10 +1077,18 @@ class App:
 
     # ── Download ──
     def start(self):
-        urls = list(dict.fromkeys(line.strip() for line in self.urls.get("1.0", "end").splitlines() if line.strip()))
-        if not urls or any(not url.startswith(("https://", "http://")) for url in urls):
-            messagebox.showinfo(t("check_links_title"), t("check_links"))
+        lines = list(dict.fromkeys(line.strip() for line in self.urls.get("1.0", "end").splitlines() if line.strip()))
+        if not lines:
+            messagebox.showinfo(t("no_links_title"), t("no_links"))
             return
+        typed = {}  # ready-to-download link -> line as the user typed it (name boxes use it)
+        for line in lines:
+            url = fix_link(line)
+            if not url:
+                messagebox.showinfo(t("bad_link_title"), t("bad_link", link=short_link(line, 70)))
+                return
+            typed.setdefault(url, line)
+        urls = list(typed)
         if not shutil.which("ffmpeg"):
             messagebox.showerror(t("no_ffmpeg_title"), t("no_ffmpeg"))
             return
@@ -1086,7 +1104,7 @@ class App:
         self.log.configure(state="disabled")
         quality = ("720", "1080", "original")[self.quality.current()]
         browser = BROWSER_KEYS[self.browser.current()]
-        names = {url: self.name_var(url).get().strip() for url in urls}
+        names = {url: self.name_var(typed[url]).get().strip() for url in urls}
         if len(urls) == 1 and not names[urls[0]]:
             names[urls[0]] = self.name_var("").get().strip()
         threading.Thread(target=self.download, args=(urls, quality, self.audio(), browser, names),

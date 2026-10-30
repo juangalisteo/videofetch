@@ -72,8 +72,8 @@
 4. Abre **`01_DESCARGAR.cmd`** y se abrirá la ventana.
 5. *(Opcional)* Abre **`03_CREAR_ACCESO_DIRECTO.cmd`** para tener VideoFetch en el escritorio con su icono.
 
-> [!IMPORTANT]
-> El paso 3 es obligatorio la primera vez. Sin él, la ventana no se abre porque falta yt-dlp.
+> [!TIP]
+> Si te saltas el paso 3, `01_DESCARGAR.cmd` se da cuenta de que falta yt-dlp y te ofrece instalarlo.
 
 ## Cómo se usa
 

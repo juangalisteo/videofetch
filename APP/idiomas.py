@@ -79,8 +79,13 @@ TEXTS = {
                      "Done · {done}. They're in the DOWNLOADS folder.")),
 
     # ── Dialogs ──
-    "check_links_title": ("Revisa los enlaces", "Check your links"),
-    "check_links": ("Pega un enlace completo https://… por línea.", "Paste one full https://… link per line."),
+    "no_links_title": ("Error", "Error"),
+    "no_links": ("Pega el enlace de un vídeo para empezar.", "Paste a video link to get started."),
+    "bad_link_title": ("Enlace no válido", "Invalid link"),
+    "bad_link": ("Esto no parece el enlace de un vídeo:\n\n{link}\n\n"
+                 "Copia la dirección completa del vídeo desde el navegador o la app y vuelve a pegarla.",
+                 "This does not look like a video link:\n\n{link}\n\n"
+                 "Copy the full video address from your browser or app and paste it again."),
     "no_ffmpeg_title": ("Falta FFmpeg", "FFmpeg is missing"),
     "no_ffmpeg": ("No se encuentra FFmpeg, necesario para unir y convertir el vídeo y el audio.",
                   "FFmpeg was not found. It is needed to merge and convert the video and audio."),

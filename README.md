@@ -72,8 +72,8 @@
 4. Run **`01_DESCARGAR.cmd`** and the window will open.
 5. *(Optional)* Run **`03_CREAR_ACCESO_DIRECTO.cmd`** to get a VideoFetch shortcut with its icon on your desktop.
 
-> [!IMPORTANT]
-> Step 3 is required the first time. Without it the window will not open, because yt-dlp is missing.
+> [!TIP]
+> If you skip step 3, `01_DESCARGAR.cmd` notices that yt-dlp is missing and offers to install it for you.
 
 > [!NOTE]
 > The launcher files and folders keep their original Spanish names (`DESCARGAR` = download, `ACTUALIZAR` = update, `CREAR_ACCESO_DIRECTO` = create shortcut, `SISTEMA` = system) so that existing installations keep working.

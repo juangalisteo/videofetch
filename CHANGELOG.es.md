@@ -6,6 +6,14 @@ Todos los cambios importantes de VideoFetch se apuntan aquí.
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y versiones según [Semantic Versioning](https://semver.org/lang/es/).
 
+## [Sin publicar]
+
+### Cambiado
+- `01_DESCARGAR.cmd` detecta la primera vez sin yt-dlp y ofrece instalarlo
+  (antes la ventana no se abría y no avisaba hasta abrir `02_ACTUALIZAR.cmd`).
+- Mensajes más claros cuando no hay enlaces o uno no es válido (dice cuál).
+- Se aceptan enlaces pegados sin `https://` (`youtube.com/...`, `youtu.be/...`).
+
 ## [1.1.0] · 30-10-2026
 
 ### Añadido

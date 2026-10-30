@@ -5,11 +5,15 @@ DOWNLOADS/*
 # Piezas instaladas por 02_ACTUALIZAR.cmd (cada uno las instala en su equipo)
 SISTEMA/
 
-# Notas internas de trabajo con la IA
+# Notas internas de trabajo con la IA y carpetas de subida
 AGENT_AI/
+PARA_GITHUB/
+SUBIR/
 
-# Ajustes personales de cada usuario
+# Ajustes personales y registros de cada usuario
 APP/videofetch_ajustes.json
+APP/videofetch_errores.log
+APP/videofetch_medidas.txt
 
 # Restos de Python y de descargas a medias
 __pycache__/

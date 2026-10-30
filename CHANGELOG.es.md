@@ -17,6 +17,9 @@ y versiones según [Semantic Versioning](https://semver.org/lang/es/).
 - Registro de errores de la ventana en `APP/videofetch_errores.log`.
 - README, historial de versiones y guía rápida (`00_README_EN.txt`) en inglés.
 
+### Cambiado
+- Comentarios y descripciones del código traducidos al inglés (sin cambios en el código).
+
 ## [1.0.0] · 30-10-2026
 
 Primera versión publicada.

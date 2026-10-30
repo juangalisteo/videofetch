@@ -164,7 +164,7 @@ A monochrome graphite background and a single signal colour: orange.
 ## Roadmap
 
 - [x] English window and README (v1.1.0)
-- [ ] Code comments in English
+- [x] Code comments in English
 - [ ] GIF of the app in action
 - [ ] `.exe` version that does not need Python installed
 - [ ] Automated tests (file names, duplicates, quality selection)

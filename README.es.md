@@ -162,7 +162,7 @@ Fondo grafito monocromo y un solo color de señal, el naranja.
 ## Próximamente
 
 - [x] Ventana y README en inglés (v1.1.0)
-- [ ] Comentarios del código en inglés
+- [x] Comentarios del código en inglés
 - [ ] GIF de la aplicación en marcha
 - [ ] Versión `.exe` que no necesite Python instalado
 - [ ] Pruebas automáticas (nombres de archivo, repetidos, elección de calidad)

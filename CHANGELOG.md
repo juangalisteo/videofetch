@@ -17,6 +17,9 @@ and this project follows [Semantic Versioning](https://semver.org/).
 - Window error log in `APP/videofetch_errores.log`.
 - README, changelog and quick guide (`00_README_EN.txt`) in English.
 
+### Changed
+- Code comments and docstrings translated to English (no code changes).
+
 ## [1.0.0] · 2026-10-30
 
 First public release.

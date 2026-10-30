@@ -1,12 +1,12 @@
-"""VideoFetch · textos de la aplicación en español e inglés.
+"""VideoFetch · application texts in Spanish and English.
 
-Todos los textos que ve el usuario están aquí. Para cambiar una frase, se cambia
-solo en este archivo. t("clave") devuelve el texto en el idioma elegido.
+Every text the user sees lives here. To change a sentence, change it only in
+this file. t("key") returns the text in the chosen language.
 
-Proyecto:  VideoFetch v1.1.0
-Autores:   Juan Bautista Galisteo Marqués (@juangalisteo)
+Project:   VideoFetch v1.1.0
+Authors:   Juan Bautista Galisteo Marqués (@juangalisteo)
            Juan Manuel Casado Triguero (@juanmacasado)
-Licencia:  MIT (ver LICENSE)
+License:   MIT (see LICENSE)
 """
 import json
 import locale
@@ -17,13 +17,13 @@ LANGUAGES = ["es", "en"]
 SETTINGS = Path(__file__).resolve().parent / "videofetch_ajustes.json"
 
 TEXTS = {
-    # ── Ventana: cabecera y presentación ──
+    # ── Window: header and intro ──
     "subtitle": ("Descargador de vídeos", "Video downloader"),
     "title": ("Tus vídeos, en tu equipo", "Your videos, on your computer"),
     "lead": ("Guarda tus vídeos directamente en tu equipo, sin anuncios ni registros.",
              "Save your videos straight to your computer, with no ads and no sign-ups."),
 
-    # ── 01 Enlaces ──
+    # ── 01 Links ──
     "links": ("Enlaces", "Links"),
     "links_hint": ("Un enlace por línea · Los repetidos se descargan una sola vez",
                    "One link per line · Duplicates are downloaded only once"),
@@ -32,7 +32,7 @@ TEXTS = {
     "videos": (("{n} vídeo", "{n} vídeos"), ("{n} video", "{n} videos")),
     "repeated": (("{n} repetido", "{n} repetidos"), ("{n} duplicate", "{n} duplicates")),
 
-    # ── 02 Formato y 03 Calidad ──
+    # ── 02 Format and 03 Quality ──
     "format": ("Formato", "Format"),
     "format_mp4": ("MP4  Vídeo", "MP4  Video"),
     "format_mp3": ("MP3  Audio", "MP3  Audio"),
@@ -45,16 +45,16 @@ TEXTS = {
     "hint_max": ("La mejor calidad", "The best quality available"),
     "hint_quality_mp3": ("Audio en MP3", "MP3 audio"),
 
-    # ── 04 Nombre y 05 Destino ──
+    # ── 04 Name and 05 Destination ──
     "file_name": ("Nombre del archivo", "File name"),
     "destination": ("Destino", "Destination"),
     "open_folder": ("Abrir carpeta", "Open folder"),
 
-    # ── Línea pequeña: cookies ──
+    # ── Small line: cookies ──
     "cookies_firefox": ("Cookies de Firefox", "Firefox cookies"),
     "cookies_chrome": ("Cookies de Chrome", "Chrome cookies"),
 
-    # ── Estado, botones y actividad ──
+    # ── Status, buttons and activity ──
     "ready": ("Todo listo · Añade tus enlaces para comenzar", "All set · Add your links to get started"),
     "show_activity": ("Ver actividad", "Show activity"),
     "hide_activity": ("Ocultar actividad", "Hide activity"),
@@ -78,7 +78,7 @@ TEXTS = {
                     ("Done · {done}. It's in the DOWNLOADS folder.",
                      "Done · {done}. They're in the DOWNLOADS folder.")),
 
-    # ── Ventanas de aviso ──
+    # ── Dialogs ──
     "check_links_title": ("Revisa los enlaces", "Check your links"),
     "check_links": ("Pega un enlace completo https://… por línea.", "Paste one full https://… link per line."),
     "no_ffmpeg_title": ("Falta FFmpeg", "FFmpeg is missing"),
@@ -88,7 +88,7 @@ TEXTS = {
     "busy": ("Pulsa Detener y espera a que termine antes de cerrar.",
              "Press Stop and wait for it to finish before closing."),
 
-    # ── Mensajes del descargador (actividad) ──
+    # ── Downloader messages (activity) ──
     "reduced": ("La web solo ofrecía {short}p · Se reduce a {wanted}p como has pedido",
                 "The site only offered {short}p · Scaled down to {wanted}p as you asked"),
     "audio_tracks": ("El vídeo traía {n} pistas de audio · Se deja solo la principal",
@@ -115,7 +115,7 @@ TEXTS = {
                       "Close it completely and try again, or choose Firefox."),
     "unsupported": ("Esta web no es compatible con VideoFetch.", "This site is not supported by VideoFetch."),
 
-    # ── Modo consola ──
+    # ── Console mode ──
     "c_step2": ("PASO 2 DE 2  |  AÑADIR VÍDEOS", "STEP 2 OF 2  |  ADD VIDEOS"),
     "c_paste": ("  Pega un enlace y pulsa ENTER para añadirlo.", "  Paste a link and press ENTER to add it."),
     "c_more": ("  Puedes seguir pegando más enlaces, uno por línea.", "  You can keep pasting more links, one per line."),
@@ -183,7 +183,7 @@ _current = None
 
 
 def system_language():
-    """Español si Windows (o el sistema) está en español; si no, inglés."""
+    """Spanish if Windows (or the system) is in Spanish; otherwise English."""
     try:
         if sys.platform == "win32":
             import ctypes
@@ -221,7 +221,7 @@ def set_language(code):
 
 
 def t(key, n=None, **values):
-    """Texto en el idioma actual. Con n, elige singular o plural."""
+    """Text in the current language. With n, picks singular or plural."""
     text = TEXTS[key][LANGUAGES.index(get_language())]
     if isinstance(text, tuple):
         text = text[0] if n == 1 else text[1]

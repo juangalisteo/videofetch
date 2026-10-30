@@ -1,11 +1,11 @@
-"""VideoFetch · lógica de descarga (también modo consola).
+"""VideoFetch · download logic (also console mode).
 
-Lanzador portátil: las rutas salen de este archivo, nunca de la carpeta desde la que se abre.
+Portable launcher: paths come from this file, never from the folder it is started from.
 
-Proyecto:  VideoFetch v1.1.0
-Autores:   Juan Bautista Galisteo Marqués (@juangalisteo)
+Project:   VideoFetch v1.1.0
+Authors:   Juan Bautista Galisteo Marqués (@juangalisteo)
            Juan Manuel Casado Triguero (@juanmacasado)
-Licencia:  MIT (ver LICENSE)
+License:   MIT (see LICENSE)
 """
 import argparse
 import re
@@ -15,18 +15,18 @@ import sys
 from pathlib import Path
 from urllib.parse import urlparse
 
-# Estructura: VIDEOFETCH\APP (este archivo), VIDEOFETCH\SISTEMA (piezas internas)
-# y VIDEOFETCH\DOWNLOADS (los vídeos). Las rutas no dependen de dónde esté la carpeta.
+# Layout: VIDEOFETCH\APP (this file), VIDEOFETCH\SISTEMA (internal parts)
+# and VIDEOFETCH\DOWNLOADS (the videos). Paths do not depend on where the folder is.
 APP = Path(__file__).resolve().parent
 ROOT = APP.parent
 LIB = ROOT / "SISTEMA"
 DOWNLOADS = ROOT / "DOWNLOADS"
-sys.path.insert(0, str(ROOT))  # por si aún no se ha ordenado la carpeta
+sys.path.insert(0, str(ROOT))  # in case the folder has not been reorganised yet
 sys.path.insert(0, str(LIB))
 sys.path.insert(0, str(APP))
-from idiomas import t, set_language, get_language, LANGUAGES  # noqa: E402  (textos en español e inglés)
+from idiomas import t, set_language, get_language, LANGUAGES  # noqa: E402  (texts in Spanish and English)
 
-# Redes sociales: se nombran como @usuario y, si fallan, se reintentan en "modo incógnito".
+# Social media: named as @username and, if they fail, retried in "incognito mode".
 SOCIAL_DOMAINS = ("tiktok.com", "instagram.com", "x.com", "twitter.com", "facebook.com", "fb.watch", "threads.net")
 
 MEDIA_EXT = "mp4|mkv|webm|mov|m4a|mp3|opus|ogg|wav|aac|flac"
@@ -69,14 +69,14 @@ def collect_urls():
         print(t("c_another"))
 
 
-# ── Nombres de archivo ────────────────────────────────────────────────────
+# ── File names ────────────────────────────────────────────────────────────
 def is_social(url):
     host = (urlparse(url).hostname or "").lower()
     return any(host == domain or host.endswith("." + domain) for domain in SOCIAL_DOMAINS)
 
 
 def base_name(info):
-    """YouTube y demás: el título del vídeo. TikTok, Instagram y X: @usuario."""
+    """YouTube and others: the video title. TikTok, Instagram and X: @username."""
     import yt_dlp
 
     key = (info.get("extractor_key") or "").lower()
@@ -98,7 +98,7 @@ def base_name(info):
 
 
 def shorten(name, limit=110):
-    """Acorta nombres largos por una palabra entera y sin dejar signos sueltos al final."""
+    """Shortens long names at a whole word, without leaving stray punctuation at the end."""
     if len(name) > limit:
         cut = name[:limit]
         name = cut[:cut.rfind(" ")] if " " in cut[limit // 2:] else cut
@@ -106,18 +106,18 @@ def shorten(name, limit=110):
 
 
 def clean_name(text):
-    """Nombre escrito por el usuario, sin caracteres que Windows no permite."""
+    """Name typed by the user, without characters Windows does not allow."""
     import yt_dlp
     text = re.sub(r'[\\/:*?"<>|]+', "-", str(text)).strip()
     return yt_dlp.utils.sanitize_filename(text, restricted=False)[:120].rstrip(" .") or "video"
 
 
 def choose_name(output, base, audio, reserved):
-    """Devuelve un nombre libre.
+    """Returns a free name.
 
-    Primer archivo de ese nombre: "nombre". Si aparece otro, el que ya existía pasa a
-    "nombre_01" y el nuevo se guarda como "nombre_02", después "nombre_03"...
-    El MP3 y el MP4 de un mismo vídeo pueden compartir nombre.
+    First file with that name: "name". If another one arrives, the existing one becomes
+    "name_01" and the new one is saved as "name_02", then "name_03"...
+    The MP3 and the MP4 of the same video can share a name.
     """
     want = "audio" if audio else "video"
     occupied = set(reserved)
@@ -154,14 +154,14 @@ def choose_name(output, base, audio, reserved):
 
 
 class NameBook:
-    """Recuerda el nombre asignado a cada vídeo para que un reintento use el mismo."""
+    """Remembers the name given to each video so a retry uses the same one."""
 
     def __init__(self):
         self.assigned = {}
         self.reserved = set()
 
 
-# ── Opciones de descarga ──────────────────────────────────────────────────
+# ── Download options ──────────────────────────────────────────────────────
 def impersonation_available():
     try:
         import curl_cffi  # noqa: F401
@@ -187,17 +187,17 @@ def make_options(output, quality, audio=False, names=None, incognito=False, cust
         info["videofetch_name"] = names.assigned[identity]
         return None
 
-    # La calidad se elige por el lado corto de la imagen, así vale igual para vídeos
-    # horizontales (YouTube: 1280x720) y verticales (TikTok, Instagram: 720x1280).
-    # "res:720" = lo más grande hasta 720p; si el vídeo no tiene nada tan pequeño,
-    # la calidad más baja que exista (nunca falla por no encontrar formato).
+    # Quality is chosen by the short side of the picture, so it works the same for
+    # horizontal (YouTube: 1280x720) and vertical videos (TikTok, Instagram: 720x1280).
+    # "res:720" = the largest up to 720p; if the video has nothing that small,
+    # the lowest quality available (it never fails for lack of a format).
     formats = "ba/b" if audio else "bv*+ba/b"
     resolution = {"720": "res:720", "1080": "res:1080"}.get(quality, "res")
     options = {
         "format": formats,
-        # Primero la mayor resolución permitida (720p, 1080p o la máxima) y, a igualdad,
-        # H.264 + AAC (compatible con editores). La resolución siempre manda.
-        # Si llega en otro formato, al terminar se convierte a H.264 + AAC (ver make_editor_fix).
+        # First the highest allowed resolution (720p, 1080p or the maximum) and, if tied,
+        # H.264 + AAC (editor friendly). Resolution always wins.
+        # If another format arrives, it is converted to H.264 + AAC at the end (see make_editor_fix).
         "format_sort": ["acodec:aac"] if audio else [resolution, "fps", "vcodec:h264", "acodec:aac"],
         "postprocessor_args": {"merger": ["-movflags", "+faststart"]},
         "outtmpl": str(output / "%(videofetch_name)s.%(ext)s"),
@@ -216,7 +216,7 @@ def make_options(output, quality, audio=False, names=None, incognito=False, cust
         "remote_components": ["ejs:github"],
     }
     if audio:
-        # MP3 con la miniatura del vídeo como carátula.
+        # MP3 with the video thumbnail as cover art.
         options["writethumbnail"] = True
         options["postprocessors"] = [
             {"key": "FFmpegThumbnailsConvertor", "format": "jpg", "when": "before_dl"},
@@ -227,8 +227,8 @@ def make_options(output, quality, audio=False, names=None, incognito=False, cust
     if shutil.which("node"):
         options["js_runtimes"] = {"node": {}}
     if incognito:
-        # "Modo incógnito": sin caché ni cookies guardadas y, si está instalado curl_cffi,
-        # haciéndose pasar por un navegador Chrome normal.
+        # "Incognito mode": no cache or stored cookies and, if curl_cffi is installed,
+        # acting like a normal Chrome browser.
         options["cachedir"] = False
         options["sleep_interval_requests"] = 1
         if impersonation_available():
@@ -238,7 +238,7 @@ def make_options(output, quality, audio=False, names=None, incognito=False, cust
 
 
 def probe_info(path):
-    """Códecs, número de pistas de audio y resolución del archivo."""
+    """Codecs, number of audio tracks and resolution of the file."""
     import json
     result = subprocess.run(
         ["ffprobe", "-v", "error", "-show_entries", "stream=codec_type,codec_name,width,height", "-of", "json",
@@ -252,7 +252,7 @@ def probe_info(path):
 
 
 VIDEO_ENCODERS = [
-    # Tarjeta gráfica NVIDIA, Intel o AMD (mucho más rápido); si no hay, el procesador.
+    # NVIDIA, Intel or AMD graphics card (much faster); otherwise, the CPU.
     ("h264_nvenc", ["-c:v", "h264_nvenc", "-preset", "p5", "-rc", "vbr", "-cq", "19", "-b:v", "0", "-pix_fmt", "yuv420p"]),
     ("h264_qsv", ["-c:v", "h264_qsv", "-global_quality", "20", "-pix_fmt", "nv12"]),
     ("h264_amf", ["-c:v", "h264_amf", "-quality", "quality", "-rc", "cqp", "-qp_i", "18", "-qp_p", "20", "-pix_fmt", "yuv420p"]),
@@ -280,7 +280,7 @@ def media_duration(path):
 
 
 def run_ffmpeg(command, duration, notify):
-    """Ejecuta FFmpeg informando del porcentaje. Devuelve (ok, mensaje de error)."""
+    """Runs FFmpeg reporting the percentage. Returns (ok, error message)."""
     process = subprocess.Popen(command + ["-progress", "pipe:1", "-nostats"], stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE, text=True,
                                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
@@ -295,7 +295,7 @@ def run_ffmpeg(command, duration, notify):
 
 
 def make_editor_fix(downloader, notify, quality="original"):
-    """Último paso: si el MP4 no es H.264 + AAC, lo convierte para que los editores lo lean."""
+    """Last step: if the MP4 is not H.264 + AAC, converts it so video editors can read it."""
     from yt_dlp.postprocessor.common import PostProcessor
 
     class EditorCompat(PostProcessor):
@@ -309,8 +309,8 @@ def make_editor_fix(downloader, notify, quality="original"):
             if not video:
                 return [], info
             self.report(info, details)
-            # Si la web solo daba más calidad de la pedida (p. ej. un reel solo en 1080p y
-            # has elegido 720p), se reduce para que ocupe lo que esperas.
+            # If the site only offered more quality than requested (e.g. a reel only in 1080p
+            # when you chose 720p), it is scaled down so it takes the space you expect.
             wanted = {"720": 720, "1080": 1080}.get(quality)
             short = min(details["width"], details["height"])
             scale = []
@@ -325,7 +325,7 @@ def make_editor_fix(downloader, notify, quality="original"):
             if is_mp4 and not fix_video and not fix_audio and not extra_audio:
                 return [], info
             if extra_audio and not fix_video and not fix_audio and is_mp4:
-                # Varias pistas de audio confunden a los editores: se deja solo la principal.
+                # Several audio tracks confuse editors: only the main one is kept.
                 notify("log", t("audio_tracks", n=details["audios"]))
             notify("status", t("converting_status"))
             notify("log", t("converting_log", ext=path.suffix[1:], video=video, sound=sound or t("no_audio")))
@@ -358,7 +358,7 @@ def make_editor_fix(downloader, notify, quality="original"):
             return [], info
 
         def report(self, info, details):
-            """Indica la calidad real conseguida y si la web no ofrece más."""
+            """Reports the real quality obtained and whether the site offers nothing better."""
             short = min(details["width"], details["height"]) or max(details["width"], details["height"])
             if not short:
                 return
@@ -375,8 +375,8 @@ def make_editor_fix(downloader, notify, quality="original"):
 
 BROWSERS = {"firefox": "Firefox", "chrome": "Chrome"}
 def remove_leftovers(output, names):
-    """Antes de reintentar, borra los restos vacíos o a medias del intento fallido
-    (p. ej. "The downloaded file is empty"), para que el reintento empiece limpio."""
+    """Before retrying, deletes empty or partial leftovers from the failed attempt
+    (e.g. "The downloaded file is empty"), so the retry starts clean."""
     for name in names.assigned.values():
         for path in output.glob(glob_escape(name) + ".*"):
             try:
@@ -392,12 +392,12 @@ def glob_escape(text):
 
 def download(url, output, quality, audio=False, extra=None, notify=None, cancelled=lambda: False,
              browser=None, custom_name=None):
-    """Descarga un enlace. Devuelve True si terminó bien.
+    """Downloads one link. Returns True if it finished correctly.
 
-    1. Intento normal.
-    2. Redes sociales: reintento en modo incógnito.
-    3. Si has elegido un navegador: reintento con tu sesión (cookies) de ese navegador,
-       para vídeos protegidos, con restricción de edad o solo para miembros.
+    1. Normal attempt.
+    2. Social media: retry in incognito mode.
+    3. If a browser was chosen: retry with your session (cookies) from that browser,
+       for protected, age-restricted or members-only videos.
     """
     import yt_dlp
 

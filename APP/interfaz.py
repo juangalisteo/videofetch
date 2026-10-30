@@ -1,9 +1,9 @@
-"""VideoFetch · ventana de descarga (comparte las opciones del lanzador de consola).
+"""VideoFetch · download window (shares its options with the console launcher).
 
-Proyecto:  VideoFetch v1.1.0
-Autores:   Juan Bautista Galisteo Marqués (@juangalisteo)
+Project:   VideoFetch v1.1.0
+Authors:   Juan Bautista Galisteo Marqués (@juangalisteo)
            Juan Manuel Casado Triguero (@juanmacasado)
-Licencia:  MIT (ver LICENSE)
+License:   MIT (see LICENSE)
 """
 import importlib.util
 import os
@@ -17,18 +17,18 @@ import tkinter.font as tkfont
 from pathlib import Path
 from tkinter import messagebox
 
-sys.dont_write_bytecode = True  # sin carpetas __pycache__ junto al programa
+sys.dont_write_bytecode = True  # no __pycache__ folders next to the program
 APP = Path(__file__).resolve().parent
 spec = importlib.util.spec_from_file_location("descargador", APP / "descargador.py")
 core = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(core)
 ROOT, DOWNLOADS = core.ROOT, core.DOWNLOADS
 import yt_dlp
-from idiomas import t, get_language, set_language, LANGUAGES  # textos en español e inglés
+from idiomas import t, get_language, set_language, LANGUAGES  # texts in Spanish and English
 
 APP_VERSION = "1.1.0"
 
-# Texto nítido en pantallas con escalado (Windows).
+# Sharp text on scaled displays (Windows).
 if sys.platform == "win32":
     try:
         import ctypes
@@ -36,12 +36,12 @@ if sys.platform == "win32":
     except Exception:
         pass
     try:
-        # Para que la barra de tareas muestre el icono de VideoFetch y no el de Python.
+        # So the taskbar shows the VideoFetch icon instead of the Python one.
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("VideoFetch.App")
     except Exception:
         pass
 
-# ── Paleta: grafito monocromo con un único color de señal ────────────────
+# ── Palette: monochrome graphite with a single signal colour ─────────────
 BG = "#0B0B0C"
 SURFACE = "#121214"
 FIELD = "#18181B"
@@ -78,7 +78,7 @@ def pick_family(*names):
 
 def setup_fonts(root):
     global SCALE
-    # Toda la ventana un 20 % más pequeña (letras, botones y espacios).
+    # The whole window 20 % smaller (text, buttons and spacing).
     root.tk.call("tk", "scaling", float(root.tk.call("tk", "scaling")) * UI_ZOOM)
     SCALE = root.winfo_fpixels("1i") / 96
     ui = pick_family("Segoe UI Variable Text", "Segoe UI", "Inter", "DejaVu Sans")
@@ -114,12 +114,12 @@ def rounded_rect(canvas, x1, y1, x2, y2, r, **kw):
     return canvas.create_polygon(points, smooth=True, **kw)
 
 
-# ── Componentes ───────────────────────────────────────────────────────────
+# ── Components ────────────────────────────────────────────────────────────
 class Button(tk.Canvas):
-    """Botón plano con esquinas redondeadas, hover y estado desactivado."""
+    """Flat button with rounded corners, hover and disabled state."""
 
     KINDS = {
-        # El botón principal es naranja; los demás solo se aclaran al pasar el ratón.
+        # The main button is orange; the others only lighten on hover.
         "primary": dict(bg=ACCENT, hover=ACCENT_HOVER, press=ACCENT_PRESS, fg=BG, fg_hover=BG,
                         border=None, off_bg="#1C1C20", off_fg="#55555C"),
         "secondary": dict(bg=FIELD, hover=RAISED, press="#2A2A2F", fg=TEXT, fg_hover=TEXT,
@@ -187,7 +187,7 @@ class Button(tk.Canvas):
 
 
 class Panel(tk.Canvas):
-    """Contenedor con fondo redondeado y borde fino. Los hijos van en .inner."""
+    """Container with a rounded background and thin border. Children go in .inner."""
 
     def __init__(self, parent, bg=SURFACE, border=BORDER, radius=16, pad=24):
         super().__init__(parent, bg=parent["bg"], highlightthickness=0, bd=0, width=1, height=1)
@@ -199,7 +199,7 @@ class Panel(tk.Canvas):
         self.after_idle(self._fit)
 
     def _fit(self, event=None):
-        if not self.winfo_exists():  # la ventana se ha redibujado (cambio de idioma)
+        if not self.winfo_exists():  # the window has been redrawn (language change)
             return
         tk.Canvas.configure(self, height=self.inner.winfo_reqheight() + 2 * self.pad)
 
@@ -216,7 +216,7 @@ class Panel(tk.Canvas):
 
 
 class Chip(tk.Canvas):
-    """Etiqueta en forma de píldora."""
+    """Pill-shaped label."""
 
     def __init__(self, parent, text, fg=MUTED, bg=None, border=BORDER, font=None):
         super().__init__(parent, bg=parent["bg"], highlightthickness=0, bd=0)
@@ -234,7 +234,7 @@ class Chip(tk.Canvas):
 
 
 class Segmented(tk.Canvas):
-    """Selector segmentado: la opción elegida queda en blanco sobre negro."""
+    """Segmented selector: the chosen option is highlighted in orange."""
 
     def __init__(self, parent, options, index=0, command=None, min_width=0, compact=False):
         super().__init__(parent, bg=parent["bg"], highlightthickness=0, bd=0, cursor="hand2")
@@ -243,7 +243,7 @@ class Segmented(tk.Canvas):
         self.font = F["tiny"] if compact else F["button"]
         self.inset, self.h = (px(2), px(22)) if compact else (px(4), px(40))
         self.radius = px(8) if compact else px(11)
-        # Todas las opciones con el mismo ancho, para que el espacio entre ellas sea igual.
+        # Every option gets the same width, so the spacing between them is even.
         widest = max(self.font.measure(o) for o in options) + (px(20) if compact else px(34))
         widths = [widest] * len(options)
         extra = max(0, px(min_width) - sum(widths) - 2 * self.inset)
@@ -310,8 +310,8 @@ class Segmented(tk.Canvas):
 
 
 class ScrollArea(tk.Frame):
-    """Zona con desplazamiento: si la pantalla es baja, nada se corta.
-    Rueda del ratón para bajar y una barra fina a la derecha (solo aparece si hace falta)."""
+    """Scrollable area: on short screens nothing gets cut off.
+    Mouse wheel to scroll and a thin bar on the right (only shown when needed)."""
 
     def __init__(self, parent):
         super().__init__(parent, bg=BG)
@@ -338,8 +338,8 @@ class ScrollArea(tk.Frame):
         return self.content.winfo_reqheight()
 
     def watch(self):
-        """Si el contenido cambia de alto (más casillas, actividad...), se reajusta solo."""
-        if not self.winfo_exists():  # la ventana se ha redibujado (cambio de idioma)
+        """If the content changes height (more boxes, activity...), it readjusts itself."""
+        if not self.winfo_exists():  # the window has been redrawn (language change)
             return
         needed = self.needed_height()
         if needed != getattr(self, "last_needed", None):
@@ -378,7 +378,7 @@ class ScrollArea(tk.Frame):
         self.canvas.yview_moveto((event.y - (self.grab or 0)) / h)
 
     def _wheel(self, event, step=None):
-        if not self.winfo_exists():  # zona antigua, ya sustituida al cambiar de idioma
+        if not self.winfo_exists():  # old area, already replaced after a language change
             return
         if step is None:
             step = -1 if event.delta > 0 else 1
@@ -395,8 +395,8 @@ class ScrollArea(tk.Frame):
 
 
 class SlimScrollbar(tk.Canvas):
-    """Barra fina para subir y bajar dentro de un cuadro de texto.
-    Aparece sola cuando hay más líneas de las que caben. Se puede arrastrar o hacer clic."""
+    """Thin scrollbar for a text box.
+    It appears on its own when there are more lines than fit. It can be dragged or clicked."""
 
     def __init__(self, parent, target):
         super().__init__(parent, bg=parent["bg"], highlightthickness=0, bd=0, width=px(12), height=1,
@@ -434,7 +434,7 @@ class SlimScrollbar(tk.Canvas):
     def _press(self, event):
         h = max(1, self.winfo_height())
         top, bottom = self.span[0] * h, self.span[1] * h
-        # Clic en la barra: se arrastra. Clic fuera: salta a ese punto.
+        # Click on the thumb: drag it. Click elsewhere: jump to that point.
         self.grab = event.y - top if top <= event.y <= bottom else (bottom - top) / 2
         self._drag(event)
 
@@ -445,7 +445,7 @@ class SlimScrollbar(tk.Canvas):
 
 
 class NameField(tk.Frame):
-    """Casilla de nombre (texto en naranja) con una × pequeña para borrarla."""
+    """Name box (orange text) with a small × to clear it."""
 
     def __init__(self, parent, variable, on_return):
         super().__init__(parent, bg=parent["bg"])
@@ -472,7 +472,7 @@ class NameField(tk.Frame):
         self._refresh()
 
     def _forget(self, event):
-        # Al rehacer la lista, la casilla vieja deja de escuchar los cambios del nombre.
+        # When the list is rebuilt, the old box stops listening to name changes.
         if event.widget is self and self.trace:
             try:
                 self.variable.trace_remove("write", self.trace)
@@ -481,7 +481,7 @@ class NameField(tk.Frame):
             self.trace = None
 
     def _refresh(self):
-        # La × solo se ve cuando hay algo escrito.
+        # The × is only shown when something is typed.
         self.clear.configure(text="×" if self.variable.get() else "")
 
     def _clear(self, event=None):
@@ -495,8 +495,8 @@ class NameField(tk.Frame):
 
 
 class IconButton(tk.Canvas):
-    """Botón diminuto sin texto, dibujado: "copy" (dos hojas), "paste" (portapapeles)
-    o "clear" (papelera). Gris; naranja al pasar el ratón; ✓ verde un momento al pulsar."""
+    """Tiny drawn button without text: "copy" (two sheets), "paste" (clipboard)
+    or "clear" (bin). Grey; orange on hover; a green ✓ for a moment when clicked."""
 
     def __init__(self, parent, kind, command, confirm=True):
         size = px(18)
@@ -562,7 +562,7 @@ def short_link(url, size=30):
 
 
 class Progress(tk.Canvas):
-    """Barra de progreso fina."""
+    """Thin progress bar."""
 
     def __init__(self, parent):
         super().__init__(parent, bg=parent["bg"], highlightthickness=0, bd=0, height=px(4), width=1)
@@ -612,7 +612,7 @@ def window_icon(root):
 
 
 def dark_title_bar(root):
-    """Barra de título oscura y del mismo color que la ventana (Windows 10/11)."""
+    """Dark title bar in the same colour as the window (Windows 10/11)."""
     if sys.platform != "win32":
         return
     try:
@@ -639,7 +639,7 @@ def eyebrow(parent, number, text):
     return label(parent, f"{number} — {text.upper()}", "eyebrow", FAINT)
 
 
-# Textos de las opciones (en el idioma elegido; ver idiomas.py).
+# Option texts (in the chosen language; see idiomas.py).
 def format_hints():
     return [t("hint_mp4"), t("hint_mp3")]
 
@@ -674,7 +674,7 @@ def save_settings(**values):
         pass
 
 
-# ── Aplicación ────────────────────────────────────────────────────────────
+# ── Application ───────────────────────────────────────────────────────────
 class App:
     def __init__(self, root):
         self.root = root
@@ -693,15 +693,15 @@ class App:
         self.root.after(100, self.poll)
 
     def build_ui(self):
-        """Dibuja toda la ventana en el idioma elegido (se repite al cambiar de idioma)."""
+        """Draws the whole window in the chosen language (repeated on language change)."""
         root = self.root
-        self.card = None  # mientras se dibuja, no se recalculan alturas de la ventana anterior
+        self.card = None  # while drawing, do not recalculate heights of the previous window
         self.area = ScrollArea(root)
         self.area.pack(fill="both", expand=True)
         frame = tk.Frame(self.area.content, bg=BG)
         frame.pack(fill="both", expand=True, padx=px(36), pady=(px(28), px(30)))
 
-        # Cabecera
+        # Header
         header = tk.Frame(frame, bg=BG)
         header.pack(fill="x")
         make_logo(header).pack(side="left")
@@ -710,16 +710,16 @@ class App:
         label(brand, "VideoFetch", "brand").pack(anchor="w")
         label(brand, t("subtitle"), "small", MUTED).pack(anchor="w")
         Chip(header, f"v{APP_VERSION}", fg=MUTED, font=F["mono"]).pack(side="right")
-        # Idioma: ES / EN, a la izquierda de la versión
+        # Language: ES / EN, left of the version
         self.language = Segmented(header, ["ES", "EN"], index=LANGUAGES.index(get_language()),
                                   command=self.on_language, compact=True)
         self.language.pack(side="right", padx=(0, px(10)))
 
-        # Presentación
+        # Intro
         label(frame, t("title"), "title").pack(anchor="w", pady=(px(34), px(6)))
         label(frame, t("lead"), "lead", MUTED).pack(anchor="w", pady=(0, px(28)))
 
-        # Tarjeta principal
+        # Main card
         card = Panel(frame)
         card.pack(fill="both", expand=True)
         body = card.inner
@@ -784,7 +784,7 @@ class App:
 
         divider()
         eyebrow(body, "04", t("file_name")).pack(anchor="w", pady=(0, px(10)))
-        # Una casilla por enlace (con 0 o 1 enlace, una sola). Vacía = nombre automático.
+        # One box per link (with 0 or 1 link, just one). Empty = automatic name.
         self.names_holder = tk.Frame(body, bg=SURFACE)
         self.names_holder.pack(fill="x")
         self.name_fields = []
@@ -800,7 +800,7 @@ class App:
         label(text, "VIDEOFETCH \\ DOWNLOADS", "mono", TEXT).pack(anchor="w", pady=(px(5), 0))
         Button(row, t("open_folder"), self.open_folder, height=36, padx=16).pack(side="right")
 
-        # Cookies: línea pequeña al final de la tarjeta
+        # Cookies: small line at the bottom of the card
         tk.Frame(body, bg=BORDER, height=1).pack(fill="x", pady=(px(20), px(12)))
         saved = load_settings().get("browser")
         browser_index = BROWSER_KEYS.index(saved) if saved in BROWSER_KEYS else 0
@@ -812,7 +812,7 @@ class App:
                                  command=self.on_browser, compact=True)
         self.browser.pack(side="right")
 
-        # Estado y progreso
+        # Status and progress
         status_row = tk.Frame(frame, bg=BG)
         status_row.pack(fill="x", pady=(px(26), px(10)))
         self.dot = tk.Canvas(status_row, width=px(8), height=px(8), bg=BG, highlightthickness=0, bd=0)
@@ -826,7 +826,7 @@ class App:
         self.progress = Progress(frame)
         self.progress.pack(fill="x")
 
-        # Acciones
+        # Actions
         actions = tk.Frame(frame, bg=BG)
         actions.pack(fill="x", pady=(px(22), 0))
         self.details_button = Button(actions, t("show_activity"), self.toggle_details, kind="ghost", height=40, padx=14)
@@ -849,7 +849,7 @@ class App:
         self.card, self.frame = card, frame
 
     def required_height(self):
-        """Altura real que necesita la ventana (las tarjetas redondeadas se miden aparte)."""
+        """Real height the window needs (rounded cards are measured separately)."""
         for _ in range(2):
             self.root.update_idletasks()
             self.field._fit()
@@ -862,8 +862,8 @@ class App:
         return self.area.needed_height()
 
     def fit_window(self):
-        """Abre la ventana con el tamaño justo para que no se corte nada.
-        En pantallas bajas, encoge el cuadro de enlaces y la deja centrada."""
+        """Opens the window at just the right size so nothing is cut off.
+        On short screens, it shrinks the links box and centres the window."""
         usable = self.root.winfo_screenheight() - px(90)
         for lines in (5, 4, 3):
             self.urls.configure(height=lines)
@@ -877,13 +877,13 @@ class App:
         self.root.geometry(f"{width}x{height}+{x}+{y}")
         self.root.minsize(px(780), px(420))
 
-    # ── Utilidades de interfaz ──
+    # ── Interface helpers ──
     def on_browser(self, index):
         self.browser_hint.set(browser_hints()[index])
         save_settings(browser=BROWSER_KEYS[index])
 
     def on_language(self, index):
-        """Cambia el idioma y redibuja la ventana sin perder lo que había escrito."""
+        """Switches the language and redraws the window without losing what was typed."""
         if self.running:
             return
         keep = dict(
@@ -972,11 +972,11 @@ class App:
         return self.name_vars[key]
 
     def build_names(self, links):
-        """Rehace la lista de casillas de nombre cuando cambian los enlaces."""
+        """Rebuilds the list of name boxes when the links change."""
         if tuple(links) == self.shown_links:
             return
         self.shown_links = tuple(links)
-        # Lo escrito antes de pegar el primer enlace pasa a ese enlace.
+        # Whatever was typed before pasting the first link moves to that link.
         if links and self.name_vars.get("") and self.name_vars[""].get() and not self.name_var(links[0]).get():
             self.name_var(links[0]).set(self.name_vars[""].get())
             self.name_vars[""].set("")
@@ -1018,7 +1018,7 @@ class App:
         self.relayout()
 
     def relayout(self):
-        """Recalcula alturas cuando cambia el contenido (más casillas, actividad...)."""
+        """Recalculates heights when the content changes (more boxes, activity...)."""
         if getattr(self, "card", None) is None:
             return
         self.required_height()
@@ -1065,7 +1065,7 @@ class App:
         self.log.see("end")
         self.log.configure(state="disabled")
 
-    # ── Descarga ──
+    # ── Download ──
     def start(self):
         urls = list(dict.fromkeys(line.strip() for line in self.urls.get("1.0", "end").splitlines() if line.strip()))
         if not urls or any(not url.startswith(("https://", "http://")) for url in urls):
@@ -1215,7 +1215,7 @@ ERROR_LOG = APP / "videofetch_errores.log"
 
 
 def log_error(*exc):
-    """Si algo falla, lo apunta en APP\\videofetch_errores.log (para poder arreglarlo)."""
+    """If something fails, it is written to APP\\videofetch_errores.log (so it can be fixed)."""
     try:
         import datetime
         import traceback

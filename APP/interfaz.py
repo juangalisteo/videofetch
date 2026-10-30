@@ -666,6 +666,7 @@ def browser_hints():
 
 
 BROWSER_KEYS = ["firefox", "chrome"]
+QUALITY_KEYS = ["720", "1080", "original"]  # same order as the 720p / 1080p / Best buttons
 SETTINGS = APP / "videofetch_ajustes.json"
 
 
@@ -789,10 +790,13 @@ class App:
         self.media.pack(side="right")
 
         divider()
-        self.quality_hint = tk.StringVar(value=quality_hints()[2])
+        # The last quality chosen is remembered (first time: Best).
+        saved_quality = load_settings().get("quality")
+        quality_index = QUALITY_KEYS.index(saved_quality) if saved_quality in QUALITY_KEYS else 2
+        self.quality_hint = tk.StringVar(value=quality_hints()[quality_index])
         row = option_row("03", t("quality"), self.quality_hint)
-        self.quality = Segmented(row, ["720p", "1080p", t("quality_max")], index=2,
-                                 command=lambda i: self.quality_hint.set(quality_hints()[i]), min_width=250)
+        self.quality = Segmented(row, ["720p", "1080p", t("quality_max")], index=quality_index,
+                                 command=self.on_quality, min_width=250)
         self.quality.pack(side="right")
 
         divider()
@@ -894,6 +898,10 @@ class App:
     def on_browser(self, index):
         self.browser_hint.set(browser_hints()[index])
         save_settings(browser=BROWSER_KEYS[index])
+
+    def on_quality(self, index):
+        self.quality_hint.set(quality_hints()[index])
+        save_settings(quality=QUALITY_KEYS[index])
 
     def on_language(self, index):
         """Switches the language and redraws the window without losing what was typed."""
@@ -1110,7 +1118,7 @@ class App:
         self.log.configure(state="normal")
         self.log.delete("1.0", "end")
         self.log.configure(state="disabled")
-        quality = ("720", "1080", "original")[self.quality.current()]
+        quality = QUALITY_KEYS[self.quality.current()]
         browser = BROWSER_KEYS[self.browser.current()]
         names = {url: self.name_var(typed[url]).get().strip() for url in urls}
         if len(urls) == 1 and not names[urls[0]]:

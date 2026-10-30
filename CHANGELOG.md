@@ -16,6 +16,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 - Clearer messages when there are no links or a link is not valid (it shows which one).
 - The links box keeps a fixed height of 5 lines; extra lines scroll inside it and the
   line being typed is always visible. Hiding the activity shrinks the window back.
+- The last quality chosen (720p / 1080p / Best) is remembered for the next time.
 - Links pasted without `https://` (`youtube.com/...`, `youtu.be/...`) are accepted.
 
 ## [1.1.0] · 2026-10-30

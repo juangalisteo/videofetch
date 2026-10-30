@@ -16,6 +16,7 @@ y versiones según [Semantic Versioning](https://semver.org/lang/es/).
 - Mensajes más claros cuando no hay enlaces o uno no es válido (dice cuál).
 - El cuadro de enlaces mide siempre 5 líneas; si hay más, se baja dentro de él y siempre
   se ve la línea en la que escribes. Al ocultar la actividad, la ventana vuelve a su tamaño.
+- Se recuerda la última calidad elegida (720p / 1080p / Máxima) para la próxima vez.
 - Se aceptan enlaces pegados sin `https://` (`youtube.com/...`, `youtu.be/...`).
 
 ## [1.1.0] · 30-10-2026

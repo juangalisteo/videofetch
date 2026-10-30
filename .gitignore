@@ -1,0 +1,23 @@
+# Vídeos descargados (solo se sube la carpeta vacía)
+DOWNLOADS/*
+!DOWNLOADS/.gitkeep
+
+# Piezas instaladas por 02_ACTUALIZAR.cmd (cada uno las instala en su equipo)
+SISTEMA/
+
+# Notas internas de trabajo con la IA
+AGENT_AI/
+
+# Ajustes personales de cada usuario
+APP/videofetch_ajustes.json
+
+# Restos de Python y de descargas a medias
+__pycache__/
+*.pyc
+*.part
+*.ytdl
+*.temp
+
+# Archivos de Windows
+Thumbs.db
+desktop.ini

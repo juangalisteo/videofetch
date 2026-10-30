@@ -36,7 +36,7 @@ VIDEOFETCH
   AGENT_AI\ESTADO.md            Estado del proyecto para trabajar con la IA
   README.md / README.es.md      Presentacion del proyecto en ingles / espanol (GitHub)
   CHANGELOG.md / CHANGELOG.es.md  Historial de versiones
-  LICENSE                       Licencia MIT
+  LICENSE                       Licencia GPL-3.0
   docs\                         Imagenes del README
 
 DESTINO
@@ -121,4 +121,4 @@ que encuentra la herramienta aunque hayas copiado o movido la carpeta.
 AUTORES
 Juan Bautista Galisteo Marqués (github.com/juangalisteo) - autor y responsable
 Juan Manuel Casado Triguero (github.com/juanmacasado) - colaborador
-Licencia MIT (archivo LICENSE).
+Licencia GPL-3.0 (archivo LICENSE).

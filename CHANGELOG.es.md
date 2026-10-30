@@ -9,6 +9,8 @@ y versiones según [Semantic Versioning](https://semver.org/lang/es/).
 ## [Sin publicar]
 
 ### Cambiado
+- **Licencia cambiada de MIT a GPL-3.0 o posterior**, de acuerdo los dos autores.
+  Las versiones 1.0.0 y 1.1.0 siguen disponibles con licencia MIT.
 - `01_DESCARGAR.cmd` detecta la primera vez sin yt-dlp y ofrece instalarlo
   (antes la ventana no se abría y no avisaba hasta abrir `02_ACTUALIZAR.cmd`).
 - Mensajes más claros cuando no hay enlaces o uno no es válido (dice cuál).

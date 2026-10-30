@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/version-1.1.0-FF5A1F?style=flat-square&labelColor=121214" alt="Version 1.1.0">
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-FF5A1F?style=flat-square&labelColor=121214" alt="Windows 10 and 11">
   <img src="https://img.shields.io/badge/Python-3.13-FF5A1F?style=flat-square&labelColor=121214" alt="Python 3.13">
-  <img src="https://img.shields.io/badge/license-MIT-FF5A1F?style=flat-square&labelColor=121214" alt="MIT license">
+  <img src="https://img.shields.io/badge/license-GPL--3.0-FF5A1F?style=flat-square&labelColor=121214" alt="GPL-3.0 license">
 </p>
 
 <p align="center">
@@ -185,6 +185,12 @@ or access restrictions: if a video is protected, it tells you and does not downl
 
 ## License
 
-Released under the **MIT** license. See the [LICENSE](LICENSE) file.
+Released under the **GNU General Public License v3.0** (GPL-3.0-or-later). See the [LICENSE](LICENSE) file.
+
+You may use, study, share and modify VideoFetch. If you distribute a modified version,
+it must also be released under the GPL with its source code.
+
+Copyright © 2026 Juan Bautista Galisteo Marqués and Juan Manuel Casado Triguero.
+Versions 1.0.0 and 1.1.0 were released under the MIT license.
 
 <p align="center"><sub>VideoFetch v1.1.0 · Juan Bautista Galisteo Marqués and Juan Manuel Casado Triguero</sub></p>

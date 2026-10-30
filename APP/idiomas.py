@@ -6,7 +6,10 @@ this file. t("key") returns the text in the chosen language.
 Project:   VideoFetch v1.1.0
 Authors:   Juan Bautista Galisteo Marqués (@juangalisteo)
            Juan Manuel Casado Triguero (@juanmacasado)
-License:   MIT (see LICENSE)
+License:   GPL-3.0-or-later (see LICENSE)
+Copyright (C) 2026 Juan Bautista Galisteo Marqués and Juan Manuel Casado Triguero.
+This program is free software: you can redistribute it and/or modify it under the terms
+of the GNU General Public License, version 3 or (at your option) any later version.
 """
 import json
 import locale

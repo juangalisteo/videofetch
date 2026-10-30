@@ -85,4 +85,4 @@ It does not bypass DRM or access restrictions.
 AUTHORS
 Juan Bautista Galisteo Marques (github.com/juangalisteo) - author and lead
 Juan Manuel Casado Triguero (github.com/juanmacasado) - collaborator
-MIT license (LICENSE file).
+GPL-3.0 license (LICENSE file).

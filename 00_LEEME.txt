@@ -1,0 +1,115 @@
+VIDEOFETCH v1.0.0 - DESCARGADOR DE VIDEOS
+
+COMO USARLO
+1. Copia la carpeta VIDEOFETCH COMPLETA donde quieras.
+2. Abre VIDEOFETCH y haz doble clic en 01_DESCARGAR.cmd.
+3. Pega un enlace completo por linea en el cuadro de enlaces. Dentro del
+   cuadro, a la derecha: icono portapapeles = pegar, papelera = limpiar.
+4. Elige el formato: MP4 (video con audio) o MP3 (solo el audio).
+5. En MP4 elige la calidad: 720p, 1080p o Maxima.
+6. Pulsa Descargar (o Ctrl + Enter). Puedes ver la actividad y pulsar Detener.
+7. El boton Abrir carpeta muestra lo descargado.
+
+ACCESO DIRECTO EN EL ESCRITORIO
+Haz doble clic UNA VEZ en 03_CREAR_ACCESO_DIRECTO.cmd y aparecera VideoFetch
+en el escritorio con su icono. Si mueves la carpeta, vuelve a abrirlo.
+
+La consola sigue disponible ejecutando APP\descargador.py con Python.
+
+ESTRUCTURA DE LA CARPETA
+VIDEOFETCH
+  00_LEEME.txt                  Estas instrucciones
+  01_DESCARGAR.cmd              Abre VideoFetch
+  02_ACTUALIZAR.cmd             Pone al dia la herramienta de descarga
+  03_CREAR_ACCESO_DIRECTO.cmd   Crea el acceso directo del escritorio
+  DOWNLOADS\                    Tus videos y audios
+  APP\                          El programa: codigo, icono y ajustes guardados
+  SISTEMA\                      Piezas internas (yt-dlp y demas). No tocar.
+  AGENT_AI\ESTADO.md            Estado del proyecto para trabajar con la IA
+  README.md                     Presentacion del proyecto (para GitHub)
+  CHANGELOG.md                  Historial de versiones
+  LICENSE                       Licencia MIT
+  docs\                         Imagenes del README
+
+DESTINO
+Los archivos se guardan en DOWNLOADS, DENTRO de VIDEOFETCH.
+Ejemplo:
+MI_PROYECTO
+  VIDEOFETCH
+    DOWNLOADS
+
+NOMBRES DE LOS ARCHIVOS
+- YouTube y otras webs: el titulo del video.      Ejemplo: Mi video.mp4
+- TikTok, Instagram y X: el usuario con @.        Ejemplo: @usuario.mp4
+- Si descargas otro video con el mismo nombre, el primero pasa a llamarse
+  @usuario_01.mp4 y los nuevos @usuario_02.mp4, @usuario_03.mp4...
+- El MP3 y el MP4 de un mismo video pueden tener el mismo nombre.
+- Nunca sobrescribe un archivo existente.
+- NOMBRE PROPIO (opcional), en "04 - Nombre del archivo":
+  - Con un enlace hay una casilla. Con varios, una casilla por enlace, en el
+    mismo orden en que los pegaste (si son mas de 4, la lista baja con su barra).
+  - Lo que escribas sera el nombre de ese video. Casilla vacia = nombre automatico.
+  - La x pequena de cada casilla borra lo escrito.
+  - Las casillas se vacian solas cuando la descarga termina bien.
+
+COMPATIBLE CON EDITORES (Sony Vegas, Premiere, DaVinci...)
+- Los videos se guardan siempre en MP4 con video H.264 y audio AAC.
+  Es el formato que leen todos los editores y Windows muestra la miniatura.
+- 720p y 1080p: se descargan directamente en H.264 + AAC (rapido y ocupan poco).
+  Funciona igual en YouTube (horizontal) que en TikTok e Instagram (vertical).
+  Si la web solo tiene el video en mas calidad de la pedida, se reduce al final
+  para que ocupe lo que esperas.
+- Maxima: descarga la mayor calidad que exista (4K si el video lo tiene) y al
+  terminar la convierte a H.264 + AAC. Tarda mas: veras "Convirtiendo para
+  editores" con su porcentaje. Si tu ordenador tiene tarjeta grafica compatible
+  (NVIDIA, Intel o AMD) la usa para ir mas rapido.
+- Los MP3 llevan la miniatura del video como caratula.
+
+REDES SOCIALES Y MODO INCOGNITO
+- Si un video de TikTok, Instagram, X o Facebook falla, VideoFetch lo reintenta
+  solo en "modo incognito": sin datos guardados y haciendose pasar por un
+  navegador Chrome normal. En la actividad veras "Reintentando en modo incognito".
+- Para que esto funcione del todo, abre 02_ACTUALIZAR.cmd UNA VEZ: instala
+  el componente que imita al navegador (curl_cffi).
+- Por si solo no inicia sesion en tus cuentas (mira COOKIES DEL NAVEGADOR).
+
+COOKIES DEL NAVEGADOR (automatico)
+- Cada video se intenta primero SIN cookies.
+- Si falla (video con edad, solo para miembros, directos recien terminados,
+  "The downloaded file is empty"...), se reintenta solo con tu sesion del
+  navegador elegido abajo del todo de la tarjeta: Firefox o Chrome.
+- Elige el navegador donde tengas abierta tu cuenta de YouTube. Recomendado:
+  Firefox. Chrome hay que cerrarlo del todo antes de descargar.
+- La eleccion se recuerda para la proxima vez.
+- No guarda ni envia tus contrasenas: solo usa la sesion abierta en tu equipo.
+
+WEBS COMPATIBLES
+- YouTube, TikTok, Instagram, X, Facebook, Vimeo, Twitch y muchas mas.
+- Si una web no es compatible o protege sus videos (DRM), en la actividad
+  veras el aviso. Busca el mismo video en YouTube o redes sociales.
+
+OTROS DETALLES
+- Los archivos .part son descargas incompletas. Puedes borrarlos.
+- Las listas de reproduccion completas no se descargan automaticamente.
+
+ACTUALIZACION
+Si YouTube cambia o aparece un error, abre 02_ACTUALIZAR.cmd.
+Necesita conexion a Internet.
+
+REQUISITOS
+Preparado para copiarlo a cualquier carpeta DE ESTE ORDENADOR.
+Utiliza Python, FFmpeg y Node.js, que ya estan instalados aqui.
+En otro ordenador tambien deberan estar instalados y disponibles en PATH.
+No es un programa completamente independiente de Windows ni de esos requisitos.
+No contiene contrasenas. Solo usa tu sesion si un video falla sin ella.
+Algunos sitios requieren acceso, no son compatibles o tienen proteccion.
+Para resolver los cambios de YouTube puede descargar componentes de yt-dlp
+desde GitHub. No permite saltarse DRM ni restricciones de acceso.
+
+No utilices SISTEMA\bin\yt-dlp.exe directamente: usa 01_DESCARGAR.cmd,
+que encuentra la herramienta aunque hayas copiado o movido la carpeta.
+
+AUTORES
+Juan Bautista Galisteo Marqués (github.com/juangalisteo) - autor y responsable
+Juan Manuel Casado Triguero (github.com/juanmacasado) - colaborador
+Licencia MIT (archivo LICENSE).

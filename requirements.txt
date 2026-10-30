@@ -1,0 +1,4 @@
+# Piezas de Python que necesita VideoFetch.
+# No hace falta instalarlas a mano: 02_ACTUALIZAR.cmd las instala en SISTEMA\
+# con:  python -m pip install --upgrade --target SISTEMA "yt-dlp[default,curl-cffi]"
+yt-dlp[default,curl-cffi]

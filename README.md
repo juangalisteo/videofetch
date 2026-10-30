@@ -15,6 +15,10 @@
   Sin anuncios y sin registros: los archivos se guardan directamente en tu equipo.
 </p>
 
+<p align="center">
+  <img src="docs/captura.png" alt="Ventana de VideoFetch" width="520">
+</p>
+
 ---
 
 ## Índice

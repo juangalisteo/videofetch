@@ -1,4 +1,4 @@
-VIDEOFETCH v1.1.0 - DESCARGADOR DE VIDEOS
+VIDEOFETCH v1.2.0 - DESCARGADOR DE VIDEOS
 (English: read 00_README_EN.txt)
 
 COMO USARLO
@@ -10,6 +10,14 @@ COMO USARLO
 5. En MP4 elige la calidad: 720p, 1080p o Maxima.
 6. Pulsa Descargar (o Ctrl + Enter). Puedes ver la actividad y pulsar Detener.
 7. El boton Abrir carpeta muestra lo descargado.
+
+SUBTITULOS (BOTON SRT)
+Al lado de 720p / 1080p / Maxima esta el boton SRT: rojo = apagado, verde = encendido.
+Encendido, junto al video se guarda "nombre.srt" con los subtitulos en el idioma de la
+ventana. Si la web los tiene (YouTube, TikTok) se usan esos; si no (Instagram, X...),
+se crean con IA (Whisper) en tu equipo y se traducen si hace falta.
+La primera vez abre 02_ACTUALIZAR.cmd para instalar la IA; al primer uso se descarga
+el modelo (unos 500 MB). Con tarjeta NVIDIA va mucho mas rapido.
 
 IDIOMA
 Arriba a la derecha, junto a la version, estan los botones ES / EN.

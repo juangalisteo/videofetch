@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/versi%C3%B3n-1.1.0-FF5A1F?style=flat-square&labelColor=121214" alt="Versión 1.1.0">
+  <img src="https://img.shields.io/badge/versi%C3%B3n-1.2.0-FF5A1F?style=flat-square&labelColor=121214" alt="Versión 1.2.0">
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-FF5A1F?style=flat-square&labelColor=121214" alt="Windows 10 y 11">
   <img src="https://img.shields.io/badge/Python-3.13-FF5A1F?style=flat-square&labelColor=121214" alt="Python 3.13">
   <img src="https://img.shields.io/badge/licencia-GPL--3.0-FF5A1F?style=flat-square&labelColor=121214" alt="Licencia GPL-3.0">
@@ -52,6 +52,7 @@
 | **Formato** | **MP4** (vídeo con audio) o **MP3** (solo audio, con la miniatura como carátula). |
 | **Calidad** | **720p**, **1080p** o **Máxima** (4K si el vídeo lo tiene). Funciona igual con vídeos horizontales y verticales. |
 | **Listo para editar** | Los MP4 salen siempre en **H.264 + AAC**, el formato que abren Sony Vegas, Premiere y DaVinci Resolve, y del que Windows muestra la miniatura. Si la web lo da en otro formato, se convierte al terminar (usa la tarjeta gráfica NVIDIA, Intel o AMD si la hay). |
+| **Subtítulos (SRT)** | Con el botón **SRT** encendido, también te llevas `nombre.srt` en el idioma de la ventana. Usa los subtítulos de la web si los hay (YouTube, incluida su traducción automática, y TikTok); si no (Instagram, X…), **los crea con IA (Whisper)** en tu equipo y los traduce si hace falta (la traducción usa Google Traductor: solo se envía por Internet el texto de los subtítulos). |
 | **Una sola pista de audio** | Si el vídeo trae varias pistas, se queda solo la principal. |
 | **Idioma** | Ventana en **español** o **inglés**: botones **ES / EN** arriba, junto a la versión. La primera vez usa el idioma de Windows y después recuerda tu elección. |
 | **Actividad** | El botón *Ver actividad* muestra el progreso, la resolución conseguida y los avisos. Se puede detener en cualquier momento. |
@@ -63,6 +64,7 @@
 - **[FFmpeg](https://ffmpeg.org/download.html)** (con `ffprobe`) en el PATH
 - **[Node.js](https://nodejs.org/)** en el PATH (lo usa yt-dlp para algunos vídeos de YouTube)
 - Conexión a Internet
+- *(Botón SRT)* unos 700 MB más de espacio: `02_ACTUALIZAR.cmd` instala Whisper y el modelo de IA (~500 MB) se descarga la primera vez que se usa. Con tarjeta NVIDIA va mucho más rápido, pero no es obligatoria.
 
 ## Instalación
 
@@ -79,7 +81,7 @@
 
 1. **01 · Enlaces**: pega un enlace por línea. Dentro del cuadro tienes los iconos de *pegar* y *limpiar*.
 2. **02 · Formato**: MP4 o MP3.
-3. **03 · Calidad**: 720p, 1080p o Máxima (solo en MP4).
+3. **03 · Calidad**: 720p, 1080p o Máxima (solo en MP4). El botón pequeño **SRT** de al lado: en verde = guarda también los subtítulos en `.srt`.
 4. **04 · Nombre del archivo** *(opcional)*: una casilla por enlace. Vacía = nombre automático.
 5. **05 · Destino**: la carpeta `DOWNLOADS\`, dentro de VideoFetch.
 6. Pulsa **Descargar** (o `Ctrl + Enter`). Al terminar, **Abrir carpeta** te lleva a los archivos.
@@ -90,6 +92,7 @@ También funciona desde la consola:
 ```bat
 python APP\descargador.py
 python APP\descargador.py --lang en
+python APP\descargador.py --srt
 ```
 
 ## Nombres de los archivos
@@ -101,6 +104,7 @@ python APP\descargador.py --lang en
 
 - **Nunca sobrescribe**: si el nombre ya existe, el primero pasa a `_01` y los nuevos son `_02`, `_03`…
 - El MP3 y el MP4 de un mismo vídeo pueden compartir nombre.
+- Los subtítulos llevan el mismo nombre que el vídeo: `Mi vídeo.mp4` + `Mi vídeo.srt`.
 
 ## Si una descarga falla
 
@@ -129,7 +133,8 @@ VIDEOFETCH
 │   ├── idiomas.py                Todos los textos en español e inglés
 │   └── videofetch.ico            Icono
 ├── DOWNLOADS\                    Aquí se guardan los vídeos
-├── SISTEMA\                      yt-dlp y dependencias (se crea con 02_ACTUALIZAR)
+├── SISTEMA\                      yt-dlp, Whisper y dependencias (se crea con 02_ACTUALIZAR)
+│   └── modelos_ia\               Modelo de IA de subtítulos (se descarga la primera vez)
 ├── docs\                         Imágenes del README
 ├── README.md / README.es.md     Este documento (inglés / español)
 ├── CHANGELOG.md / CHANGELOG.es.md
@@ -146,6 +151,8 @@ VIDEOFETCH
 | **yt-dlp** | Descarga desde cientos de webs |
 | **FFmpeg** | Unir, convertir y reducir vídeo y audio |
 | **curl_cffi** | "Modo incógnito" que imita a Chrome |
+| **faster-whisper** | IA que pasa la voz a texto (Whisper) para los subtítulos |
+| **deep-translator** | Traducción de los subtítulos |
 
 ## Diseño
 
@@ -163,6 +170,7 @@ Fondo grafito monocromo y un solo color de señal, el naranja.
 
 - [x] Ventana y README en inglés (v1.1.0)
 - [x] Comentarios del código en inglés
+- [x] Subtítulos SRT, con IA (Whisper) si la web no los da (v1.2.0)
 - [ ] GIF de la aplicación en marcha
 - [ ] Versión `.exe` que no necesite Python instalado
 - [ ] Pruebas automáticas (nombres de archivo, repetidos, elección de calidad)
@@ -191,4 +199,4 @@ también tiene que publicarse bajo la GPL y con su código fuente.
 Copyright © 2026 Juan Bautista Galisteo Marqués y Juan Manuel Casado Triguero.
 Las versiones 1.0.0 y 1.1.0 se publicaron con licencia MIT.
 
-<p align="center"><sub>VideoFetch v1.1.0 · Juan Bautista Galisteo Marqués y Juan Manuel Casado Triguero</sub></p>
+<p align="center"><sub>VideoFetch v1.2.0 · Juan Bautista Galisteo Marqués y Juan Manuel Casado Triguero</sub></p>

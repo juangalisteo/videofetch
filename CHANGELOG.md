@@ -6,7 +6,17 @@ All notable changes to VideoFetch are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.2.0] · 2026-10-31
+
+### Added
+- **SRT subtitles button** next to the quality buttons (small; red when off, green when on,
+  remembered). It saves `name.srt` next to the video, in the window's language:
+  - first, the site's own subtitles (YouTube, including its automatic translation, and TikTok);
+  - if the site has none (Instagram, X, TikTok without captions…), they are **created with AI
+    (Whisper)** on your computer, using an NVIDIA card when available, and translated if needed.
+- Console mode: `--srt`.
+- `02_ACTUALIZAR.cmd` also installs the AI parts (faster-whisper, deep-translator) and saves
+  its output to `APP/videofetch_actualizar.log`.
 
 ### Changed
 - **License changed from MIT to GPL-3.0-or-later**, agreed by both authors.

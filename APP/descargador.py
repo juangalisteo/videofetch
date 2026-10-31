@@ -2,7 +2,7 @@
 
 Portable launcher: paths come from this file, never from the folder it is started from.
 
-Project:   VideoFetch v1.1.0
+Project:   VideoFetch v1.2.0
 Authors:   Juan Bautista Galisteo Marqués (@juangalisteo)
            Juan Manuel Casado Triguero (@juanmacasado)
 License:   GPL-3.0-or-later (see LICENSE)
@@ -147,6 +147,12 @@ def choose_name(output, base, audio, reserved):
             if not target.exists():
                 try:
                     path.rename(target)
+                    # Its .srt subtitles (name.srt) follow it: name_01.srt
+                    old_stem = path.name[:stem_end]
+                    subs = list(output.glob(glob_escape(old_stem) + ".srt"))
+                    subs += list(output.glob(glob_escape(old_stem) + ".*.srt"))
+                    for sub in subs:
+                        sub.rename(sub.with_name(old_stem + "_01" + sub.name[len(old_stem):]))
                 except OSError:
                     pass
         numbers.append(1)
@@ -171,6 +177,9 @@ def impersonation_available():
         return True
     except Exception:
         return False
+
+
+SUB_CODES = {"es": ["es", "es-.*", "spa.*"], "en": ["en", "en-.*", "eng.*"]}
 
 
 def make_options(output, quality, audio=False, names=None, incognito=False, custom_name=None):
@@ -218,6 +227,7 @@ def make_options(output, quality, audio=False, names=None, incognito=False, cust
         "overwrites": False,
         "remote_components": ["ejs:github"],
     }
+
     if audio:
         # MP3 with the video thumbnail as cover art.
         options["writethumbnail"] = True
@@ -376,6 +386,198 @@ def make_editor_fix(downloader, notify, quality="original"):
     return EditorCompat(downloader)
 
 
+# ── Subtitles: from the site or created with AI (Whisper) ─────────────────
+WHISPER_MODEL = "small"  # good balance between quality and speed (~500 MB, downloaded once)
+MODELS = LIB / "modelos_ia"
+_whisper = None
+
+
+def make_recorder(downloader, files):
+    """Remembers the final path of each downloaded file (after conversions and moves)."""
+    from yt_dlp.postprocessor.common import PostProcessor
+
+    class Recorder(PostProcessor):
+        def run(self, info):
+            if info.get("filepath"):
+                files.append(Path(info["filepath"]))
+            return [], info
+
+    return Recorder(downloader)
+
+
+def srt_time(seconds):
+    ms = int(round(max(0.0, seconds) * 1000))
+    return f"{ms // 3600000:02d}:{ms // 60000 % 60:02d}:{ms // 1000 % 60:02d},{ms % 1000:03d}"
+
+
+def write_srt(path, cues):
+    lines = []
+    for number, (start, end, text) in enumerate(cues, 1):
+        lines += [str(number), f"{srt_time(start)} --> {srt_time(end)}", text, ""]
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def whisper_model(notify):
+    """Loads Whisper once. Uses an NVIDIA card if it works; otherwise the CPU."""
+    global _whisper
+    if _whisper is None:
+        from faster_whisper import WhisperModel
+        if not any(MODELS.glob("models--*whisper-" + WHISPER_MODEL)):
+            notify("status", t("ai_model_download"))
+            notify("log", t("ai_model_download"))
+        device = "cpu"
+        try:
+            import ctranslate2
+            if ctranslate2.get_cuda_device_count() > 0:
+                device = "cuda"
+        except Exception:
+            pass
+        if device == "cuda":
+            try:
+                _whisper = (WhisperModel(WHISPER_MODEL, device="cuda", compute_type="float16",
+                                         download_root=str(MODELS)), "cuda")
+            except Exception:
+                device = "cpu"
+        if device == "cpu":
+            _whisper = (WhisperModel(WHISPER_MODEL, device="cpu", compute_type="int8",
+                                     download_root=str(MODELS)), "cpu")
+    return _whisper
+
+
+def load_audio(media):
+    """Audio as Whisper wants it (16 kHz mono), extracted with FFmpeg.
+    (Whisper's own reader breaks with recent versions of PyAV.)"""
+    import numpy as np
+    result = subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-i", str(media), "-vn", "-f", "s16le",
+                             "-ac", "1", "-ar", "16000", "-"], capture_output=True,
+                            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr.decode("utf-8", "replace").strip()[-300:] or "ffmpeg")
+    return np.frombuffer(result.stdout, np.int16).astype(np.float32) / 32768.0
+
+
+def transcribe(media, notify, cancelled):
+    """Listens to the file with Whisper. Returns (language, [(start, end, text)]) or None if stopped."""
+    global _whisper
+    audio = load_audio(media)
+    duration = len(audio) / 16000
+    for _ in range(2):
+        model, device = whisper_model(notify)
+        try:
+            segments, info = model.transcribe(audio, vad_filter=True)
+            cues = []
+            for segment in segments:
+                if cancelled():
+                    return None
+                text = segment.text.strip()
+                if text:
+                    cues.append((segment.start, segment.end, text))
+                if duration:
+                    notify("progress", min(99.0, segment.end / duration * 100))
+            return info.language, cues
+        except Exception:
+            if device != "cuda":
+                raise
+            # The graphics card failed (missing CUDA parts): try again on the CPU.
+            _whisper = (type(model)(WHISPER_MODEL, device="cpu", compute_type="int8",
+                                    download_root=str(MODELS)), "cpu")
+    return None
+
+
+def translate_lines(lines, source, target):
+    """Translates the subtitle lines (Google Translate, needs Internet). Keeps the line count."""
+    from deep_translator import GoogleTranslator
+    translator = GoogleTranslator(source="auto", target=target)  # auto: safer than Whisper's codes
+    result, chunk, size = [], [], 0
+    for line in lines + [None]:
+        if line is None or size + len(line) > 3500:
+            if chunk:
+                joined = translator.translate("\n".join(chunk)) or ""
+                parts = joined.split("\n")
+                if len(parts) != len(chunk):  # the lines got mixed up: one by one
+                    parts = [translator.translate(item) or item for item in chunk]
+                result += [part.strip() for part in parts]
+            chunk, size = [], 0
+        if line is not None:
+            chunk.append(line)
+            size += len(line) + 1
+    return result
+
+
+def fetch_site_subtitles(url, media, lang, options, logger=None):
+    """Second pass, only for subtitles: if the site refuses them, the video is already saved."""
+    import yt_dlp
+    options = dict(options)
+    for key in ("match_filter", "postprocessors", "writethumbnail", "progress_hooks"):
+        options.pop(key, None)
+    options.update({
+        "skip_download": True,
+        "writesubtitles": True,
+        "writeautomaticsub": True,  # automatic ones too, including YouTube's automatic translation
+        "subtitleslangs": SUB_CODES.get(lang, [lang, lang + "-.*"]),
+        "subtitlesformat": "srt/vtt/best",
+        "postprocessors": [{"key": "FFmpegSubtitlesConvertor", "format": "srt", "when": "before_dl"}],
+        "outtmpl": str(media.parent / (media.stem.replace("%", "%%") + ".%(ext)s")),
+        "ignoreerrors": True,
+        "quiet": True,
+        "noprogress": True,
+    })
+    if logger:
+        options["logger"] = logger
+    with yt_dlp.YoutubeDL(options) as downloader:
+        downloader.download([url])
+
+
+def make_subtitles(media, lang, notify, cancelled, fetch=None):
+    """Leaves name.srt next to the video: from the site if it gives them; if not, with Whisper."""
+    target = media.with_name(media.stem + ".srt")
+    if fetch:
+        try:
+            fetch()
+        except Exception as exc:  # no subtitles from the site: Whisper will make them
+            notify("log", t("warning") + str(exc)[-200:])
+    found = sorted(media.parent.glob(glob_escape(media.stem) + ".*.srt"))
+    if found:
+        keep = target if target in found else found[0]
+        for extra in found:
+            if extra != keep:
+                extra.unlink(missing_ok=True)
+        if keep != target:
+            keep.replace(target)
+        notify("log", t("subs_from_site", file=target.name))
+        return
+    try:
+        import faster_whisper  # noqa: F401
+    except Exception:
+        notify("log", t("ai_missing"))
+        return
+    notify("log", t("subs_with_ai"))
+    notify("status", t("subs_ai_status"))
+    notify("progress", 0)
+    try:
+        result = transcribe(media, notify, cancelled)
+    except Exception as exc:
+        notify("log", t("subs_failed") + str(exc)[-300:])
+        return
+    if result is None:
+        return
+    spoken, cues = result
+    if not cues:
+        notify("log", t("subs_no_speech"))
+        return
+    if spoken and spoken != lang:
+        notify("status", t("subs_translating"))
+        notify("log", t("subs_translating"))
+        try:
+            texts = translate_lines([text for _, _, text in cues], spoken, lang)
+            cues = [(start, end, text) for (start, end, _), text in zip(cues, texts)]
+        except Exception as exc:
+            notify("log", t("subs_no_translation") + str(exc)[-200:])
+    write_srt(target, cues)
+    notify("progress", 100)
+    notify("log", t("subs_ready", file=target.name))
+
+
 BROWSERS = {"firefox": "Firefox", "chrome": "Chrome"}
 def remove_leftovers(output, names):
     """Before retrying, deletes empty or partial leftovers from the failed attempt
@@ -394,13 +596,14 @@ def glob_escape(text):
 
 
 def download(url, output, quality, audio=False, extra=None, notify=None, cancelled=lambda: False,
-             browser=None, custom_name=None):
+             browser=None, custom_name=None, subtitles=None):
     """Downloads one link. Returns True if it finished correctly.
 
     1. Normal attempt.
     2. Social media: retry in incognito mode.
     3. If a browser was chosen: retry with your session (cookies) from that browser,
        for protected, age-restricted or members-only videos.
+    With subtitles="es" (or "en"), it also leaves name.srt next to the video.
     """
     import yt_dlp
 
@@ -429,12 +632,18 @@ def download(url, output, quality, audio=False, extra=None, notify=None, cancell
         if mode == "cookies":
             options["cookiesfrombrowser"] = (browser,)
         options.update(extra or {})
+        files = []
         try:
             with yt_dlp.YoutubeDL(options) as downloader:
                 if not audio:
                     downloader.add_post_processor(make_editor_fix(downloader, notify, quality),
                                                   when="post_process")
+                downloader.add_post_processor(make_recorder(downloader, files), when="after_move")
                 if not downloader.download([url]):
+                    if subtitles and files and not cancelled():
+                        media = files[-1]
+                        make_subtitles(media, subtitles, notify, cancelled, fetch=lambda: fetch_site_subtitles(
+                            url, media, subtitles, options, (extra or {}).get("logger")))
                     return True
         except Exception as exc:
             if cancelled():
@@ -455,6 +664,28 @@ def download(url, output, quality, audio=False, extra=None, notify=None, cancell
     return False
 
 
+UPDATE_LOG = APP / "videofetch_actualizar.log"
+
+
+def update():
+    """Installs / updates the download tool and the AI subtitle parts in SISTEMA.
+    Everything shown on screen is also saved to APP\\videofetch_actualizar.log."""
+    import datetime
+    command = [sys.executable, "-m", "pip", "install", "--upgrade", "--target", str(LIB),
+               "yt-dlp[default,curl-cffi]", "faster-whisper", "deep-translator"]
+    with UPDATE_LOG.open("w", encoding="utf-8") as log:
+        log.write(f"{datetime.datetime.now():%Y-%m-%d %H:%M:%S} · {' '.join(command)}\n")
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+                                   encoding="utf-8", errors="replace")
+        for line in process.stdout:
+            print(line, end="", flush=True)
+            log.write(line)
+            log.flush()
+        code = process.wait()
+        log.write(f"\n--- exit code {code} ---\n")
+    return code
+
+
 def main():
     if "--lang" in sys.argv[1:-1]:
         set_language(sys.argv[sys.argv.index("--lang") + 1])
@@ -465,12 +696,12 @@ def main():
     parser.add_argument("--cookies", choices=sorted(BROWSERS), help=t("c_help_cookies"))
     parser.add_argument("--nombre", "--name", dest="nombre", help=t("c_help_name"))
     parser.add_argument("--lang", choices=LANGUAGES, help=t("c_help_lang"))
+    parser.add_argument("--srt", action="store_true", help=t("c_help_srt"))
     parser.add_argument("--update", action="store_true")
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
     if args.update:
-        return subprocess.call([sys.executable, "-m", "pip", "install", "--upgrade", "--target", str(LIB),
-                                "yt-dlp[default,curl-cffi]"])
+        return update()
     import yt_dlp
     if args.check:
         print(t("c_tool"), yt_dlp.version.__version__)
@@ -524,6 +755,7 @@ def main():
         section(t("c_link_of", i=index, n=len(urls)))
         print("  " + url + "\n", flush=True)
         if not download(url, output, quality, audio, browser=args.cookies, custom_name=args.nombre,
+                        subtitles=get_language() if args.srt else None,
                         notify=lambda kind, text="": kind != "progress" and print("  " + str(text))):
             failures += 1
     section(t("c_summary"))

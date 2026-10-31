@@ -1,4 +1,6 @@
-# Piezas de Python que necesita VideoFetch.
+# Piezas de Python que necesita VideoFetch / Python parts VideoFetch needs.
 # No hace falta instalarlas a mano: 02_ACTUALIZAR.cmd las instala en SISTEMA\
-# con:  python -m pip install --upgrade --target SISTEMA "yt-dlp[default,curl-cffi]"
+# with:  python -m pip install --upgrade --target SISTEMA "yt-dlp[default,curl-cffi]" faster-whisper deep-translator
 yt-dlp[default,curl-cffi]
+faster-whisper   # subtítulos con IA / AI subtitles (Whisper)
+deep-translator  # traducción de los subtítulos / subtitle translation

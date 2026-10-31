@@ -3,7 +3,7 @@
 Every text the user sees lives here. To change a sentence, change it only in
 this file. t("key") returns the text in the chosen language.
 
-Project:   VideoFetch v1.1.0
+Project:   VideoFetch v1.2.0
 Authors:   Juan Bautista Galisteo Marqués (@juangalisteo)
            Juan Manuel Casado Triguero (@juanmacasado)
 License:   GPL-3.0-or-later (see LICENSE)
@@ -47,6 +47,7 @@ TEXTS = {
     "hint_1080": ("Hasta 1080p · Alta definición", "Up to 1080p · High definition"),
     "hint_max": ("La mejor calidad", "The best quality available"),
     "hint_quality_mp3": ("Audio en MP3", "MP3 audio"),
+    "hint_srt": ("Con subtítulos .srt", "With .srt subtitles"),
 
     # ── 04 Name and 05 Destination ──
     "file_name": ("Nombre del archivo", "File name"),
@@ -123,6 +124,24 @@ TEXTS = {
                       "Close it completely and try again, or choose Firefox."),
     "unsupported": ("Esta web no es compatible con VideoFetch.", "This site is not supported by VideoFetch."),
 
+    # ── Subtitles (SRT button) ──
+    "subs_from_site": ("Subtítulos de la web guardados: {file}", "Subtitles from the site saved: {file}"),
+    "subs_with_ai": ("La web no da subtítulos · Se crean con IA (Whisper) en tu equipo",
+                     "The site has no subtitles · Creating them with AI (Whisper) on your computer"),
+    "subs_ai_status": ("Creando subtítulos con IA… puede tardar unos minutos",
+                       "Creating subtitles with AI… this may take a few minutes"),
+    "ai_model_download": ("Descargando el modelo de IA de subtítulos (solo la primera vez, unos 500 MB)…",
+                          "Downloading the AI subtitle model (first time only, about 500 MB)…"),
+    "subs_translating": ("Traduciendo los subtítulos…", "Translating the subtitles…"),
+    "subs_ready": ("Subtítulos listos: {file}", "Subtitles ready: {file}"),
+    "subs_no_speech": ("No se ha oído voz en el vídeo · No hay subtítulos que crear",
+                       "No speech was heard in the video · No subtitles to create"),
+    "subs_no_translation": ("Aviso: no se pudo traducir (¿sin Internet?) · Se guardan en el idioma original. ",
+                            "Warning: could not translate (no Internet?) · Saved in the original language. "),
+    "subs_failed": ("Aviso: no se pudieron crear los subtítulos: ", "Warning: could not create the subtitles: "),
+    "ai_missing": ("Falta la pieza de subtítulos con IA · Abre 02_ACTUALIZAR.cmd una vez y vuelve a probar",
+                   "The AI subtitle part is missing · Run 02_ACTUALIZAR.cmd once and try again"),
+
     # ── Console mode ──
     "c_step2": ("PASO 2 DE 2  |  AÑADIR VÍDEOS", "STEP 2 OF 2  |  ADD VIDEOS"),
     "c_paste": ("  Pega un enlace y pulsa ENTER para añadirlo.", "  Paste a link and press ENTER to add it."),
@@ -145,6 +164,8 @@ TEXTS = {
     "c_help_cookies": ("Usar la sesión de este navegador si hace falta", "Use this browser's session if needed"),
     "c_help_name": ("Nombre para los archivos (opcional)", "Name for the files (optional)"),
     "c_help_lang": ("Idioma: es o en", "Language: es or en"),
+    "c_help_srt": ("Guardar también los subtítulos .srt (de la web o creados con IA)",
+                   "Also save .srt subtitles (from the site or created with AI)"),
     "c_tool": ("Herramienta:", "Tool:"),
     "c_not_found": ("NO ENCONTRADO", "NOT FOUND"),
     "c_incognito": ("Modo incógnito completo:", "Full incognito mode:"),

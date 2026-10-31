@@ -1,4 +1,4 @@
-VIDEOFETCH v1.1.0 - VIDEO DOWNLOADER
+VIDEOFETCH v1.2.0 - VIDEO DOWNLOADER
 (Espanol: lee 00_LEEME.txt)
 
 HOW TO USE IT
@@ -11,6 +11,14 @@ HOW TO USE IT
 6. For MP4 choose the quality: 720p, 1080p or Best.
 7. Press Download (or Ctrl + Enter). You can show the activity and press Stop.
 8. The Open folder button shows what you downloaded.
+
+SUBTITLES (SRT BUTTON)
+Next to 720p / 1080p / Best there is the SRT button: red = off, green = on.
+When on, "name.srt" with subtitles in the window's language is saved next to the
+video. If the site has them (YouTube, TikTok) those are used; if not (Instagram,
+X...), they are created with AI (Whisper) on your computer and translated if needed.
+The first time, run 02_ACTUALIZAR.cmd to install the AI; on first use the model
+(about 500 MB) is downloaded. An NVIDIA card makes it much faster.
 
 LANGUAGE
 At the top right, next to the version, there are the ES / EN buttons.

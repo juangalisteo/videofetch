@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.1.0-FF5A1F?style=flat-square&labelColor=121214" alt="Version 1.1.0">
+  <img src="https://img.shields.io/badge/version-1.2.0-FF5A1F?style=flat-square&labelColor=121214" alt="Version 1.2.0">
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-FF5A1F?style=flat-square&labelColor=121214" alt="Windows 10 and 11">
   <img src="https://img.shields.io/badge/Python-3.13-FF5A1F?style=flat-square&labelColor=121214" alt="Python 3.13">
   <img src="https://img.shields.io/badge/license-GPL--3.0-FF5A1F?style=flat-square&labelColor=121214" alt="GPL-3.0 license">
@@ -52,6 +52,7 @@
 | **Format** | **MP4** (video with audio) or **MP3** (audio only, with the thumbnail as cover art). |
 | **Quality** | **720p**, **1080p** or **Best** (4K if the video has it). Works the same for horizontal and vertical videos. |
 | **Ready to edit** | MP4 files always come out as **H.264 + AAC**, the format Sony Vegas, Premiere and DaVinci Resolve open, and the one Windows shows thumbnails for. If the site serves another format, it is converted at the end (using an NVIDIA, Intel or AMD graphics card when available). |
+| **Subtitles (SRT)** | With the **SRT** button on, you also get `name.srt` in the window's language. It uses the site's subtitles when there are any (YouTube, including its automatic translation, and TikTok); if not (Instagram, X…), it **creates them with AI (Whisper)** on your computer and translates them if needed (the translation uses Google Translate, so only the subtitle text is sent over the Internet). |
 | **A single audio track** | If the video has several audio tracks, only the main one is kept. |
 | **Language** | The window comes in **English** or **Spanish**: **ES / EN** buttons at the top, next to the version. On first launch it follows the Windows language, then remembers your choice. |
 | **Activity** | The *Show activity* button displays progress, the resolution obtained and any warnings. You can stop at any time. |
@@ -63,6 +64,7 @@
 - **[FFmpeg](https://ffmpeg.org/download.html)** (with `ffprobe`) on the PATH
 - **[Node.js](https://nodejs.org/)** on the PATH (yt-dlp uses it for some YouTube videos)
 - An Internet connection
+- *(SRT button)* about 700 MB of extra space: `02_ACTUALIZAR.cmd` installs Whisper, and the AI model (~500 MB) downloads the first time it is used. An NVIDIA card makes it much faster, but it is not required.
 
 ## Installation
 
@@ -82,7 +84,7 @@
 
 1. **01 · Links**: paste one link per line. Inside the box you have the *paste* and *clear* icons.
 2. **02 · Format**: MP4 or MP3.
-3. **03 · Quality**: 720p, 1080p or Best (MP4 only).
+3. **03 · Quality**: 720p, 1080p or Best (MP4 only). The small **SRT** button next to it: green = also save subtitles as `.srt`.
 4. **04 · File name** *(optional)*: one box per link. Empty = automatic name.
 5. **05 · Destination**: the `DOWNLOADS\` folder, inside VideoFetch.
 6. Press **Download** (or `Ctrl + Enter`). When it finishes, **Open folder** takes you to the files.
@@ -92,6 +94,7 @@ It also works from the console:
 
 ```bat
 python APP\descargador.py --lang en
+python APP\descargador.py --srt
 ```
 
 ## File names
@@ -103,6 +106,7 @@ python APP\descargador.py --lang en
 
 - **Never overwrites**: if the name already exists, the first file becomes `_01` and new ones are `_02`, `_03`…
 - The MP3 and the MP4 of the same video can share a name.
+- Subtitles use the same name as the video: `My video.mp4` + `My video.srt`.
 
 ## If a download fails
 
@@ -131,7 +135,8 @@ VIDEOFETCH
 │   ├── idiomas.py                Every text in Spanish and English
 │   └── videofetch.ico            Icon
 ├── DOWNLOADS\                    Downloaded videos go here
-├── SISTEMA\                      yt-dlp and dependencies (created by 02_ACTUALIZAR)
+├── SISTEMA\                      yt-dlp, Whisper and dependencies (created by 02_ACTUALIZAR)
+│   └── modelos_ia\               AI subtitle model (downloaded the first time)
 ├── docs\                         README images
 ├── README.md / README.es.md      This document (English / Spanish)
 ├── CHANGELOG.md / CHANGELOG.es.md
@@ -148,6 +153,8 @@ VIDEOFETCH
 | **yt-dlp** | Downloads from hundreds of sites |
 | **FFmpeg** | Merges, converts and scales video and audio |
 | **curl_cffi** | "Incognito mode" that imitates Chrome |
+| **faster-whisper** | Speech-to-text AI (Whisper) for the subtitles |
+| **deep-translator** | Translation of the subtitles |
 
 ## Design
 
@@ -165,6 +172,7 @@ A monochrome graphite background and a single signal colour: orange.
 
 - [x] English window and README (v1.1.0)
 - [x] Code comments in English
+- [x] SRT subtitles, with AI (Whisper) when the site has none (v1.2.0)
 - [ ] GIF of the app in action
 - [ ] `.exe` version that does not need Python installed
 - [ ] Automated tests (file names, duplicates, quality selection)
@@ -193,4 +201,4 @@ it must also be released under the GPL with its source code.
 Copyright © 2026 Juan Bautista Galisteo Marqués and Juan Manuel Casado Triguero.
 Versions 1.0.0 and 1.1.0 were released under the MIT license.
 
-<p align="center"><sub>VideoFetch v1.1.0 · Juan Bautista Galisteo Marqués and Juan Manuel Casado Triguero</sub></p>
+<p align="center"><sub>VideoFetch v1.2.0 · Juan Bautista Galisteo Marqués and Juan Manuel Casado Triguero</sub></p>

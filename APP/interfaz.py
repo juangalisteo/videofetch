@@ -1,6 +1,6 @@
 """VideoFetch · download window (shares its options with the console launcher).
 
-Project:   VideoFetch v1.1.0
+Project:   VideoFetch v1.2.0
 Authors:   Juan Bautista Galisteo Marqués (@juangalisteo)
            Juan Manuel Casado Triguero (@juanmacasado)
 License:   GPL-3.0-or-later (see LICENSE)
@@ -29,7 +29,7 @@ ROOT, DOWNLOADS = core.ROOT, core.DOWNLOADS
 import yt_dlp
 from idiomas import t, get_language, set_language, LANGUAGES  # texts in Spanish and English
 
-APP_VERSION = "1.1.0"
+APP_VERSION = "1.2.0"
 
 # Sharp text on scaled displays (Windows).
 if sys.platform == "win32":
@@ -305,6 +305,58 @@ class Segmented(tk.Canvas):
             self.state = "disabled" if kw.pop("state") == "disabled" else "normal"
             tk.Canvas.configure(self, cursor="hand2" if self.state == "normal" else "arrow")
             self.hovered = None
+            self._draw()
+        if kw:
+            tk.Canvas.configure(self, **kw)
+
+    config = configure
+
+
+class Toggle(tk.Canvas):
+    """Small on/off button: translucent red when off, green when on."""
+
+    OFF = dict(fill="#2A1315", outline="#5C1F24", text="#F87171", hover="#FCA5A5")
+    ON = dict(fill="#0E2A20", outline="#34D399", text="#34D399", hover="#6EE7B7")
+
+    def __init__(self, parent, text, value=False, command=None):
+        super().__init__(parent, bg=parent["bg"], highlightthickness=0, bd=0, cursor="hand2")
+        self.text, self.value, self.command = text, value, command
+        self.state, self.hover = "normal", False
+        self.font = F["chip"]
+        self.w, self.h = self.font.measure(text) + px(26), px(28)  # smaller than the 720p / 1080p buttons
+        tk.Canvas.configure(self, width=self.w, height=self.h)
+        self.bind("<Enter>", lambda e: self._set_hover(True))
+        self.bind("<Leave>", lambda e: self._set_hover(False))
+        self.bind("<Button-1>", self._click)
+        self._draw()
+
+    def _set_hover(self, value):
+        self.hover = value
+        self._draw()
+
+    def _click(self, event):
+        if self.state != "normal":
+            return
+        self.value = not self.value
+        self._draw()
+        if self.command:
+            self.command(self.value)
+
+    def _draw(self):
+        self.delete("all")
+        if self.state == "disabled":
+            fill, outline, color = FIELD, BORDER, FAINT
+        else:
+            look = self.ON if self.value else self.OFF
+            fill, outline = look["fill"], look["outline"]
+            color = look["hover"] if self.hover else look["text"]
+        rounded_rect(self, 1, 1, self.w - 1, self.h - 1, px(8), fill=fill, outline=outline)
+        self.create_text(self.w / 2, self.h / 2, text=self.text, fill=color, font=self.font)
+
+    def configure(self, **kw):
+        if "state" in kw:
+            self.state = "disabled" if kw.pop("state") == "disabled" else "normal"
+            tk.Canvas.configure(self, cursor="hand2" if self.state == "normal" else "arrow")
             self._draw()
         if kw:
             tk.Canvas.configure(self, **kw)
@@ -798,6 +850,10 @@ class App:
         self.quality = Segmented(row, ["720p", "1080p", t("quality_max")], index=quality_index,
                                  command=self.on_quality, min_width=250)
         self.quality.pack(side="right")
+        # SRT: also save subtitles (from the site, or created with AI) in the window's language.
+        self.srt = Toggle(row, "SRT", value=bool(load_settings().get("subtitles")), command=self.on_srt)
+        self.srt.pack(side="right", padx=(0, px(10)))
+        self.update_quality_hint()
 
         divider()
         eyebrow(body, "04", t("file_name")).pack(anchor="w", pady=(0, px(10)))
@@ -900,8 +956,19 @@ class App:
         save_settings(browser=BROWSER_KEYS[index])
 
     def on_quality(self, index):
-        self.quality_hint.set(quality_hints()[index])
         save_settings(quality=QUALITY_KEYS[index])
+        self.update_quality_hint()
+
+    def on_srt(self, value):
+        save_settings(subtitles=value)
+        self.update_quality_hint()
+
+    def update_quality_hint(self):
+        """Hint under 03 · Quality, plus "With .srt subtitles" when SRT is on."""
+        text = t("hint_quality_mp3") if self.audio() else quality_hints()[self.quality.current()]
+        if self.srt.value:
+            text += " · " + t("hint_srt")
+        self.quality_hint.set(text)
 
     def on_language(self, index):
         """Switches the language and redraws the window without losing what was typed."""
@@ -929,8 +996,7 @@ class App:
         if keep["quality"] != self.quality.current():
             self.quality.index = keep["quality"]
             self.quality._draw()
-            if not self.audio():
-                self.quality_hint.set(quality_hints()[keep["quality"]])
+            self.update_quality_hint()
         if keep["log"]:
             self.write_log(keep["log"])
         if keep["details"]:
@@ -942,12 +1008,8 @@ class App:
 
     def on_format(self, index):
         self.format_hint.set(format_hints()[index])
-        if self.audio():
-            self.quality.configure(state="disabled")
-            self.quality_hint.set(t("hint_quality_mp3"))
-        else:
-            self.quality.configure(state="normal")
-            self.quality_hint.set(quality_hints()[self.quality.current()])
+        self.quality.configure(state="disabled" if self.audio() else "normal")
+        self.update_quality_hint()
 
     def set_dot(self, color):
         self.dot.itemconfigure("dot", fill=color)
@@ -1075,6 +1137,7 @@ class App:
         self.media.configure(state=state)
         self.browser.configure(state=state)
         self.language.configure(state=state)
+        self.srt.configure(state=state)
         for field in self.name_fields:
             field.set_state(state)
         self.quality.configure(state="normal" if enabled and not self.audio() else "disabled")
@@ -1119,11 +1182,12 @@ class App:
         self.log.delete("1.0", "end")
         self.log.configure(state="disabled")
         quality = QUALITY_KEYS[self.quality.current()]
+        subtitles = get_language() if self.srt.value else None
         browser = BROWSER_KEYS[self.browser.current()]
         names = {url: self.name_var(typed[url]).get().strip() for url in urls}
         if len(urls) == 1 and not names[urls[0]]:
             names[urls[0]] = self.name_var("").get().strip()
-        threading.Thread(target=self.download, args=(urls, quality, self.audio(), browser, names),
+        threading.Thread(target=self.download, args=(urls, quality, self.audio(), browser, names, subtitles),
                          daemon=True).start()
 
     def stop(self):
@@ -1132,7 +1196,7 @@ class App:
         self.set_dot(WARNING)
         self.stop_button.configure(state="disabled")
 
-    def download(self, urls, quality, audio, browser=None, names=None):
+    def download(self, urls, quality, audio, browser=None, names=None, subtitles=None):
         app = self
 
         class Logger:
@@ -1183,7 +1247,7 @@ class App:
                 self.events.put(("progress", 0))
                 ok = core.download(url, output, quality, audio, extra=extra, notify=notify, browser=browser,
                                    custom_name=(names or {}).get(url) or None,
-                                   cancelled=self.cancel.is_set)
+                                   cancelled=self.cancel.is_set, subtitles=subtitles)
                 if self.cancel.is_set():
                     break
                 if ok:

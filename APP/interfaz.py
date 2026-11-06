@@ -671,9 +671,40 @@ def window_icon(root):
     ico = APP / "videofetch.ico"
     if sys.platform == "win32" and ico.exists():
         try:
-            root.iconbitmap(default=str(ico))
+            root.iconbitmap(str(ico))           # this window
+            root.iconbitmap(default=str(ico))   # and any dialog it opens
         except tk.TclError:
             pass
+        root.after(50, lambda: taskbar_icon(root, ico))
+
+
+def taskbar_icon(root, ico):
+    """Give the window the real .ico (big and small) so Windows shows it on the
+    taskbar and in Alt+Tab instead of the Python logo."""
+    if sys.platform != "win32" or not ico.exists():
+        return
+    try:
+        import ctypes
+        from ctypes import wintypes
+        user32 = ctypes.windll.user32
+        user32.LoadImageW.restype = wintypes.HANDLE
+        user32.LoadImageW.argtypes = [wintypes.HINSTANCE, wintypes.LPCWSTR, wintypes.UINT,
+                                      ctypes.c_int, ctypes.c_int, wintypes.UINT]
+        user32.SendMessageW.restype = ctypes.c_ssize_t
+        user32.SendMessageW.argtypes = [wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM]
+        user32.GetParent.restype = wintypes.HWND
+        user32.GetParent.argtypes = [wintypes.HWND]
+        root.update_idletasks()
+        hwnd = user32.GetParent(root.winfo_id()) or root.winfo_id()
+        image_icon, load_from_file, wm_seticon = 1, 0x10, 0x80
+        for kind, metric in ((1, 11), (0, 49)):  # ICON_BIG / SM_CXICON, ICON_SMALL / SM_CXSMICON
+            size = user32.GetSystemMetrics(metric)
+            handle = user32.LoadImageW(None, str(ico), image_icon, size, size, load_from_file)
+            if handle:
+                user32.SendMessageW(hwnd, wm_seticon, kind, handle)
+                root._taskbar_icons = getattr(root, "_taskbar_icons", []) + [handle]
+    except Exception:
+        pass
 
 
 def dark_title_bar(root):
